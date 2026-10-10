@@ -1,0 +1,70 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+import @maps
+
+private mut HexidecimalMap map[u8:char] = {
+	0:'0',
+	1:'1',
+	2:'2',
+	3:'3',
+	4:'4',
+	5:'5',
+	6:'6',
+	7:'7',
+	8:'8',
+	9:'9',
+	10:'A',
+	11:'B',
+	12:'C',
+	13:'D',
+	14:'E',
+	15:'F'
+}
+
+#doc("Converts the passed in byte(b)passed as type u8...to two hexidecimal values as type char")
+fn byte_to_hex(b u8) -> (char, char) {
+	mut high = b/16
+	mut low = b % 16
+
+	return HexidecimalMap[high], HexidecimalMap[low]
+}
+
+#doc("Takes 2 hexidecimal values as type char(high, low) and returns the byte equivalent as type u8")
+fn hex_to_byte(high, low char) -> u8 {
+    keys = maps.get_keys(HexidecimalMap)
+
+    mut highBytes u8 = 0
+    mut lowBytes u8 = 0
+
+    for_each k in keys {
+        if HexidecimalMap[k] == high {
+            highBytes = k
+        }
+        if HexidecimalMap[k] == low {
+            lowBytes = k
+        }
+    }
+
+    return highBytes * 16 + lowBytes
+}
+
+#doc("Converts 3 passed in u8 values(r,g,b) and returns the hexidecimal equivalant as a string")
+fn rgb_to_hex(r,g,b u8) -> string {
+    mut rHigh, rLow = byte_to_hex(r)
+    mut gHigh, gLow = byte_to_hex(g)
+    mut bHigh, bLow = byte_to_hex(b)
+
+    return "${rHigh}${rLow}${gHigh}${gLow}${bHigh}${bLow}"
+}
+
+#doc("Takes the passed full hexideciaml value(hex) returns 3 byte representations(r,g,b)")
+fn hex_to_rgb(hex string) -> (u8,u8,u8){
+     mut r = hex_to_byte(hex[0], hex[1])
+     mut g = hex_to_byte(hex[2], hex[3])
+     mut b = hex_to_byte(hex[4], hex[5])
+
+     return r, g, b
+ }
