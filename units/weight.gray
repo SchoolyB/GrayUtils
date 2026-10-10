@@ -1,0 +1,118 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+/*********************************
+WEIGHT CONSTANTS
+*********************************/
+const MG_PER_GRAM f64 = 1000.0
+const GRAMS_PER_KG f64 = 1000.0
+const KG_PER_METRIC_TON f64 = 1000.0
+const OZ_PER_LB f64 = 16.0
+const LB_PER_STONE f64 = 14.0
+const LB_PER_SHORT_TON f64 = 2000.0
+const GRAMS_PER_OZ f64 = 28.3495
+const GRAMS_PER_LB f64 = 453.592
+const KG_PER_LB f64 = 0.453592
+const KG_PER_STONE f64 = 6.35029
+const KG_PER_SHORT_TON f64 = 907.185
+const OZ_PER_GRAM f64 = 0.035274
+const LB_PER_KG f64 = 2.20462
+const LB_PER_GRAM f64 = 0.00220462
+const STONES_PER_KG f64 = 0.157473
+const SHORT_TONS_PER_KG f64 = 0.00110231
+
+/*********************************
+METRIC TO METRIC CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed milligrams(val) to grams")]
+fn convert_milligram_to_gram(val f64) -> f64 {return val / MG_PER_GRAM}
+
+#[doc("Converts the passed grams(val) to milligrams")]
+fn convert_gram_to_milligram(val f64) -> f64 {return val * MG_PER_GRAM}
+
+#[doc("Converts the passed grams(val) to kilograms")]
+fn convert_gram_to_kilogram(val f64) -> f64 {return val / GRAMS_PER_KG}
+
+#[doc("Converts the passed kilograms(val) to grams")]
+fn convert_kilogram_to_gram(val f64) -> f64 {return val * GRAMS_PER_KG}
+
+#[doc("Converts the passed kilograms(val) to metric tons")]
+fn convert_kilogram_to_metric_ton(val f64) -> f64 {return val / KG_PER_METRIC_TON}
+
+#[doc("Converts the passed metric tons(val) to kilograms")]
+fn convert_metric_ton_to_kilogram(val f64) -> f64 {return val * KG_PER_METRIC_TON}
+
+
+/*********************************
+IMPERIAL TO IMPERIAL CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed ounces(val) to pounds")]
+fn convert_ounce_to_pound(val f64) -> f64 {return val / OZ_PER_LB}
+
+#[doc("Converts the passed pounds(val) to ounces")]
+fn convert_pound_to_ounce(val f64) -> f64 {return val * OZ_PER_LB}
+
+#[doc("Converts the passed pounds(val) to stone")]
+fn convert_pound_to_stone(val f64) -> f64 {return val / LB_PER_STONE}
+
+#[doc("Converts the passed stone(val) to pounds")]
+fn convert_stone_to_pound(val f64) -> f64 {return val * LB_PER_STONE}
+
+#[doc("Converts the passed pounds(val) to short tons")]
+fn convert_pound_to_short_ton(val f64) -> f64 {return val / LB_PER_SHORT_TON}
+
+#[doc("Converts the passed short tons(val) to pounds")]
+fn convert_short_ton_to_pound(val f64) -> f64 {return val * LB_PER_SHORT_TON}
+
+
+/*********************************
+IMPERIAL TO METRIC CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed ounces(val) to grams")]
+fn convert_ounce_to_gram(val f64) -> f64 {return val * GRAMS_PER_OZ}
+
+#[doc("Converts the passed ounces(val) to kilograms")]
+fn convert_ounce_to_kilogram(val f64) -> f64 {return val * GRAMS_PER_OZ / GRAMS_PER_KG}
+
+#[doc("Converts the passed pounds(val) to grams")]
+fn convert_pound_to_gram(val f64) -> f64 {return val * GRAMS_PER_LB}
+
+#[doc("Converts the passed pounds(val) to kilograms")]
+fn convert_pound_to_kilogram(val f64) -> f64 {return val * KG_PER_LB}
+
+#[doc("Converts the passed stone(val) to kilograms")]
+fn convert_stone_to_kilogram(val f64) -> f64 {return val * KG_PER_STONE}
+
+#[doc("Converts the passed short tons(val) to kilograms")]
+fn convert_short_ton_to_kilogram(val f64) -> f64 {return val * KG_PER_SHORT_TON}
+
+#[doc("Converts the passed short tons(val) to metric tons")]
+fn convert_short_ton_to_metric_ton(val f64) -> f64 {return val * KG_PER_SHORT_TON / KG_PER_METRIC_TON}
+
+
+/*********************************
+METRIC TO IMPERIAL CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed grams(val) to ounces")]
+fn convert_gram_to_ounce(val f64) -> f64 {return val * OZ_PER_GRAM}
+
+#[doc("Converts the passed grams(val) to pounds")]
+fn convert_gram_to_pound(val f64) -> f64 {return val * LB_PER_GRAM}
+
+#[doc("Converts the passed kilograms(val) to ounces")]
+fn convert_kilogram_to_ounce(val f64) -> f64 {return val * GRAMS_PER_KG * OZ_PER_GRAM}
+
+#[doc("Converts the passed kilograms(val) to pounds")]
+fn convert_kilogram_to_pound(val f64) -> f64 {return val * LB_PER_KG}
+
+#[doc("Converts the passed kilograms(val) to stone")]
+fn convert_kilogram_to_stone(val f64) -> f64 {return val * STONES_PER_KG}
+
+#[doc("Converts the passed kilograms(val) to short tons")]
+fn convert_kilogram_to_short_ton(val f64) -> f64 {return val * SHORT_TONS_PER_KG}
+
+#[doc("Converts the passed metric tons(val) to short tons")]
+fn convert_metric_ton_to_short_ton(val f64) -> f64 {return val * KG_PER_METRIC_TON * SHORT_TONS_PER_KG}
