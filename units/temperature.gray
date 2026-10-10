@@ -1,0 +1,42 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+/*********************************
+TEMPERATURE CONSTANTS
+*********************************/
+const CELSIUS_TO_FAHRENHEIT_MULTIPLIER f64 = 1.8
+const FAHRENHEIT_TO_CELSIUS_MULTIPLIER f64 = 0.555556
+const FAHRENHEIT_OFFSET f64 = 32.0
+const KELVIN_OFFSET f64 = 273.15
+
+/*********************************
+CELSIUS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed degrees Celsius(val) to degrees Fahrenheit")]
+fn convert_celsius_to_fahrenheit(val f64) -> f64 {return val * CELSIUS_TO_FAHRENHEIT_MULTIPLIER + FAHRENHEIT_OFFSET}
+
+#[doc("Converts the passed degrees Celsius(val) to kelvin")]
+fn convert_celsius_to_kelvin(val f64) -> f64 {return val + KELVIN_OFFSET}
+
+
+/*********************************
+FAHRENHEIT CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed degrees Fahrenheit(val) to degrees Celsius")]
+fn convert_fahrenheit_to_celsius(val f64) -> f64 {return (val - FAHRENHEIT_OFFSET) * FAHRENHEIT_TO_CELSIUS_MULTIPLIER}
+
+#[doc("Converts the passed degrees Fahrenheit(val) to kelvin")]
+fn convert_fahrenheit_to_kelvin(val f64) -> f64 {return (val - FAHRENHEIT_OFFSET) * FAHRENHEIT_TO_CELSIUS_MULTIPLIER + KELVIN_OFFSET}
+
+
+/*********************************
+KELVIN CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed kelvin(val) to degrees Celsius")]
+fn convert_kelvin_to_celsius(val f64) -> f64 {return val - KELVIN_OFFSET}
+
+#[doc("Converts the passed kelvin(val) to degrees Fahrenheit")]
+fn convert_kelvin_to_fahrenheit(val f64) -> f64 {return (val - KELVIN_OFFSET) * CELSIUS_TO_FAHRENHEIT_MULTIPLIER + FAHRENHEIT_OFFSET}
