@@ -1,0 +1,242 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+//STANDARD FOREGROUND COLORS
+const TEXT_BLACK string = "\x1b[30m"
+const TEXT_RED string = "\x1b[31m"
+const TEXT_GREEN string = "\x1b[32m"
+const TEXT_YELLOW string = "\x1b[33m"
+const TEXT_BLUE string = "\x1b[34m"
+const TEXT_MAGENTA string = "\x1b[35m"
+const TEXT_CYAN string = "\x1b[36m"
+const TEXT_WHITE string = "\x1b[37m"
+
+//BRIGHT FOREGROUND COLORS
+const TEXT_BRIGHT_RED string = "\x1b[91m"
+const TEXT_BRIGHT_GREEN string = "\x1b[92m"
+const TEXT_BRIGHT_YELLOW string = "\x1b[93m"
+const TEXT_BRIGHT_BLUE string = "\x1b[94m"
+const TEXT_BRIGHT_MAGENTA string = "\x1b[95m"
+const TEXT_BRIGHT_CYAN string = "\x1b[96m"
+const TEXT_BRIGHT_WHITE string = "\x1b[97m"
+
+//STANDARD BACKGROUND COLORS
+const BG_BLACK string = "\x1b[40m"
+const BG_RED string = "\x1b[41m"
+const BG_GREEN string = "\x1b[42m"
+const BG_YELLOW string = "\x1b[43m"
+const BG_BLUE string = "\x1b[44m"
+const BG_MAGENTA string = "\x1b[45m"
+const BG_CYAN string = "\x1b[46m"
+const BG_WHITE string = "\x1b[47m"
+
+//BRIGHT BACKGROUND COLORS
+const BG_BRIGHT_RED string = "\x1b[101m"
+const BG_BRIGHT_GREEN string = "\x1b[102m"
+const BG_BRIGHT_YELLOW string = "\x1b[103m"
+const BG_BRIGHT_BLUE string = "\x1b[104m"
+const BG_BRIGHT_MAGENTA string = "\x1b[105m"
+const BG_BRIGHT_CYAN string = "\x1b[106m"
+const BG_BRIGHT_WHITE string = "\x1b[107m"
+
+//TEXT STYLING
+const RESET string = "\x1b[0m"
+const BOLD string = "\x1b[1m"
+const DIM string = "\x1b[2m"
+const ITALIC string = "\x1b[3m"
+const UNDERLINE string = "\x1b[4m"
+const REVERSE string = "\x1b[7m"
+const STRIKE string = "\x1b[9m"
+
+//Foreground Color Functions
+#[discard, doc("Takes the passed in text 't' wraps in black foreground ANSI escape code and returns it")]
+fn text_to_black(t string) -> string {
+    return "${TEXT_BLACK}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text 't' wraps in red foreground ANSI escape code and returns it")]
+fn text_to_red(t string) -> string {
+    return "${TEXT_RED}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text 't' wraps in green foreground ANSI escape code and returns it")]
+fn text_to_green(t string) -> string {
+    return "${TEXT_GREEN}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text 't' wraps in yellow foreground ANSI escape code and returns it")]
+fn text_to_yellow(t string) -> string {
+    return "${TEXT_YELLOW}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text 't' wraps in blue foreground ANSI escape code and returns it")]
+fn text_to_blue(t string) -> string {
+    return "${TEXT_BLUE}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text 't' wraps in magenta foreground ANSI escape code and returns it")]
+fn text_to_magenta(t string) -> string {
+    return "${TEXT_MAGENTA}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text 't' wraps in cyan foreground ANSI escape code and returns it")]
+fn text_to_cyan(t string) -> string {
+    return "${TEXT_CYAN}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text 't' wraps in white foreground ANSI escape code and returns it")]
+fn text_to_white(t string) -> string {
+    return "${TEXT_WHITE}${t}${RESET}"
+}
+
+// Bright Foreground Color Functions
+#[discard, doc("Takes the passed in text(t) wraps in bright red foreground ANSI escape code and returns")]
+fn text_to_bright_red(t string) -> string {
+    return "${TEXT_BRIGHT_RED}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright green foreground ANSI escape code and returns")]
+fn text_to_bright_green(t string) -> string {
+    return "${TEXT_BRIGHT_GREEN}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright yellow foreground ANSI escape code and returns")]
+fn text_to_bright_yellow(t string) -> string {
+    return "${TEXT_BRIGHT_YELLOW}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright blue foreground ANSI escape code and returns")]
+fn text_to_bright_blue(t string) -> string {
+    return "${TEXT_BRIGHT_BLUE}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright magenta foreground ANSI escape code and returns")]
+fn text_to_bright_magenta(t string) -> string {
+    return "${TEXT_BRIGHT_MAGENTA}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright cyan foreground ANSI escape code and returns")]
+fn text_to_bright_cyan(t string) -> string {
+    return "${TEXT_BRIGHT_CYAN}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright white foreground ANSI escape code and returns")]
+fn text_to_bright_white(t string) -> string {
+    return "${TEXT_BRIGHT_WHITE}${t}${RESET}"
+}
+
+// Background Color Functions
+#[discard, doc("Takes the passed in text(t) wraps in black background ANSI escape code and returns")]
+fn bg_to_black(t string) -> string {
+    return "${BG_BLACK}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in red background ANSI escape code and returns")]
+fn bg_to_red(t string) -> string {
+    return "${BG_RED}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in green background ANSI escape code and returns")]
+fn bg_to_green(t string) -> string {
+    return "${BG_GREEN}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in yellow background ANSI escape code and returns")]
+fn bg_to_yellow(t string) -> string {
+    return "${BG_YELLOW}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in blue background ANSI escape code and returns")]
+fn bg_to_blue(t string) -> string {
+    return "${BG_BLUE}${t}${RESET}"
+}
+
+
+#[discard, doc("Takes the passed in text(t) wraps in magenta background ANSI escape code and returns")]
+fn bg_to_magenta(t string) -> string {
+    return "${BG_MAGENTA}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in cyan background ANSI escape code and returns")]
+fn bg_to_cyan(t string) -> string {
+    return "${BG_CYAN}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in white background ANSI escape code and returns")]
+fn bg_to_white(t string) -> string {
+    return "${BG_WHITE}${t}${RESET}"
+}
+
+// Bright Background Color Functions
+#[discard, doc("Takes the passed in text(t) wraps in bright red background ANSI escape code and returns")]
+fn bg_to_bright_red(t string) -> string {
+    return "${BG_BRIGHT_RED}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright green background ANSI escape code and returns")]
+fn bg_to_bright_green(t string) -> string {
+    return "${BG_BRIGHT_GREEN}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright yellow background ANSI escape code and returns")]
+fn bg_to_bright_yellow(t string) -> string {
+    return "${BG_BRIGHT_YELLOW}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright blue background ANSI escape code and returns")]
+fn bg_to_bright_blue(t string) -> string {
+    return "${BG_BRIGHT_BLUE}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright magenta background ANSI escape code and returns")]
+fn bg_to_bright_magenta(t string) -> string {
+    return "${BG_BRIGHT_MAGENTA}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright cyan background ANSI escape code and returns")]
+fn bg_to_bright_cyan(t string) -> string {
+    return "${BG_BRIGHT_CYAN}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bright white background ANSI escape code and returns")]
+fn bg_to_bright_white(t string) -> string {
+    return "${BG_BRIGHT_WHITE}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in bold ANSI escape code and returns")]
+fn make_bold(t string) -> string {
+    return "${BOLD}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in dim ANSI escape code and returns")]
+fn make_dim(t string) -> string {
+    return "${DIM}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in italic ANSI escape code and returns")]
+fn make_italic(t string) -> string {
+    return "${ITALIC}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in underline ANSI escape code and returns")]
+fn make_underline(t string) -> string {
+    return "${UNDERLINE}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in reverse ANSI escape code and returns")]
+fn make_reverse(t string) -> string {
+    return "${REVERSE}${t}${RESET}"
+}
+
+#[discard, doc("Takes the passed in text(t) wraps in strick ANSI escape code and returns")]
+fn make_strike(t string) -> string {
+    return "${STRIKE}${t}${RESET}"
+}
+
+#[discard, doc("Resets text")]
+fn reset() -> string {
+	return RESET
+}
