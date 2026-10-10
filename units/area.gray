@@ -1,0 +1,149 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+/*********************************
+AREA CONSTANTS
+*********************************/
+const SQ_CM_PER_SQ_METER f64 = 10000.0
+const SQ_METERS_PER_SQ_KM f64 = 1000000.0
+const SQ_INCHES_PER_SQ_FOOT f64 = 144.0
+const SQ_FEET_PER_SQ_YARD f64 = 9.0
+const SQ_FEET_PER_ACRE f64 = 43560.0
+const ACRES_PER_SQ_MILE f64 = 640.0
+const SQ_CM_PER_SQ_INCH f64 = 6.4516
+const SQ_METERS_PER_SQ_FOOT f64 = 0.092903
+const SQ_METERS_PER_SQ_YARD f64 = 0.836127
+const SQ_METERS_PER_ACRE f64 = 4046.86
+const SQ_KM_PER_SQ_MILE f64 = 2.58999
+const HECTARES_PER_ACRE f64 = 0.404686
+const SQ_INCHES_PER_SQ_CM f64 = 0.155
+const SQ_FEET_PER_SQ_METER f64 = 10.7639
+const SQ_YARDS_PER_SQ_METER f64 = 1.19599
+const ACRES_PER_SQ_METER f64 = 0.000247105
+const SQ_MILES_PER_SQ_KM f64 = 0.386102
+const ACRES_PER_HECTARE f64 = 2.47105
+
+/*********************************
+SHAPE AREA CALCULATION FUNCTIONS
+*********************************/
+#[doc("Calculates the area of a rectangle with the passed in length(l) and width(w)")]
+fn calculate_rectangle_area(l, w f64) -> f64 {return l * w}
+
+#[doc("Calculates the area of a square with the passed in side's(s) length")]
+fn calculate_square_area(s f64) -> f64 {return s * s}
+
+#[doc("Calculates the area of a triangle with the passed base(b) and height(h)")]
+fn calculate_triangle_area(b, h f64) -> f64 {return b * h / 2}
+
+#[doc("Calculates the area of a circle with the passed radius(r)")]
+fn calculate_circle_area(r f64) -> f64 {return math.PI * r * r}
+
+#[doc("Calculates the area of a parallelogram with the passed base(b) and height(h)")]
+fn calculate_parallelogram_area(b, h f64) -> f64 {return b * h}
+
+#[doc("Calculates the area of a trapezoid with the passed base1(b1), base2(b2) and heigh(h)")]
+fn calculate_trapezoid_area(b1, b2, h f64) -> f64 {return (b1 + b2) / 2 * h}
+
+#[doc("Calculates the area of an ellipse with the passed radiouses(r1, r2)")]
+fn calculate_ellipse_area(r1, r2 f64) -> f64 {return math.PI * r1 * r2}
+
+#[doc("Calculates the area of a rhombus with the passed diagonals(d1, d2)")]
+fn calculate_rhombus_area(d1, d2 f64) -> f64 {return d1 * d2 / 2}
+
+/*********************************
+METRIC TO METRIC CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed value(val) as square centimeters to square meters")]
+fn sq_centimeter_to_sq_meter(val f64) -> f64 {return val / SQ_CM_PER_SQ_METER}
+
+#[doc("Converts the passed value(val) as square meters to square centimeters")]
+fn sq_meter_to_sq_centimeter(val f64) -> f64 {return val * SQ_CM_PER_SQ_METER}
+
+#[doc("Converts the passed value(val) as square meters to square kilometers")]
+fn sq_meter_to_sq_kilometer(val f64) -> f64 {return val / SQ_METERS_PER_SQ_KM}
+
+#[doc("Converts the passed value(val) as square kilometers to square meters")]
+fn sq_kilometer_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_SQ_KM}
+
+#[doc("Converts the passed value(val) as square meters to hectares")]
+fn sq_meter_to_hectare(val f64) -> f64 {return val / SQ_METERS_PER_ACRE * HECTARES_PER_ACRE}
+
+#[doc("Converts the passed value(val) as hectares to square meters")]
+fn hectare_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_ACRE / HECTARES_PER_ACRE}
+
+
+/*********************************
+IMPERIAL TO IMPERIAL CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed value(val) as square inches to square feet")]
+fn sq_inch_to_sq_foot(val f64) -> f64 {return val / SQ_INCHES_PER_SQ_FOOT}
+
+#[doc("Converts the passed value(val) as square feet to square inches")]
+fn sq_foot_to_sq_inch(val f64) -> f64 {return val * SQ_INCHES_PER_SQ_FOOT}
+
+#[doc("Converts the passed value(val) as square feet to square yards")]
+fn sq_foot_to_sq_yard(val f64) -> f64 {return val / SQ_FEET_PER_SQ_YARD}
+
+#[doc("Converts the passed value(val) as square yards to square feet")]
+fn sq_yard_to_sq_foot(val f64) -> f64 {return val * SQ_FEET_PER_SQ_YARD}
+
+#[doc("Converts the passed value(val) as square feet to acres")]
+fn sq_foot_to_acre(val f64) -> f64 {return val / SQ_FEET_PER_ACRE}
+
+#[doc("Converts the passed value(val) as acres to square feet")]
+fn acre_to_sq_foot(val f64) -> f64 {return val * SQ_FEET_PER_ACRE}
+
+#[doc("Converts the passed value(val) as acres to square miles")]
+fn acre_to_sq_mile(val f64) -> f64 {return val / ACRES_PER_SQ_MILE}
+
+#[doc("Converts the passed value(val) as square miles to acres")]
+fn sq_mile_to_acre(val f64) -> f64 {return val * ACRES_PER_SQ_MILE}
+
+
+/*********************************
+IMPERIAL TO METRIC CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed value(val) as square inches to square centimeters")]
+fn sq_inch_to_sq_centimeter(val f64) -> f64 {return val * SQ_CM_PER_SQ_INCH}
+
+#[doc("Converts the passed value(val) as square feet to square meters")]
+fn sq_foot_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_SQ_FOOT}
+
+#[doc("Converts the passed value(val) as square yards to square meters")]
+fn sq_yard_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_SQ_YARD}
+
+#[doc("Converts the passed value(val) as acres to square meters")]
+fn acre_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_ACRE}
+
+#[doc("Converts the passed value(val) as acres to hectares")]
+fn acre_to_hectare(val f64) -> f64 {return val * HECTARES_PER_ACRE}
+
+#[doc("Converts the passed value(val) as square miles to square kilometers")]
+fn sq_mile_to_sq_kilometer(val f64) -> f64 {return val * SQ_KM_PER_SQ_MILE}
+
+
+/*********************************
+METRIC TO IMPERIAL CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed value(val) as square centimeters to square inches")]
+fn sq_centimeter_to_sq_inch(val f64) -> f64 {return val * SQ_INCHES_PER_SQ_CM}
+
+#[doc("Converts the passed value(val) as square meters to square feet")]
+fn sq_meter_to_sq_foot(val f64) -> f64 {return val * SQ_FEET_PER_SQ_METER}
+
+#[doc("Converts the passed value(val) as square meters to square yards")]
+fn sq_meter_to_sq_yard(val f64) -> f64 {return val * SQ_YARDS_PER_SQ_METER}
+
+#[doc("Converts the passed value(val) as square meters to acres")]
+fn sq_meter_to_acre(val f64) -> f64 {return val * ACRES_PER_SQ_METER}
+
+#[doc("Converts the passed value(val) as hectares to acres")]
+fn hectare_to_acre(val f64) -> f64 {return val * ACRES_PER_HECTARE}
+
+#[doc("Converts the passed value(val) as square kilometers to square miles")]
+fn sq_kilometer_to_sq_mile(val f64) -> f64 {return val * SQ_MILES_PER_SQ_KM}
