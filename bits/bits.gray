@@ -1,0 +1,306 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+//INTERNAL CONSTANTS
+private const MIN_BITS_COUNT i64 = -1
+
+#error_code
+private const BitsErrorCodes enum {
+    BITS_SIGNED_TYPE
+    BITS_POSITION_OUT_OF_RANGE
+    BITS_COUNT_OUT_OF_RANGE
+    BITS_INVALID_BINARY_STRING
+}
+
+// Returns the number of bits in kind
+private fn bits_width(kind generic) -> i64 {
+    return size_of(kind) * 8
+}
+
+// Returns an error when kind is a signed integer type
+private fn validate_bits_kind(kind generic) -> Error {
+    mut zero kind = 0
+    mut ones kind = bit_not zero
+    if ones < zero {
+        return error(.BITS_SIGNED_TYPE, "Bit functions need an unsigned integer type, not a signed one")
+    }
+    return nil
+}
+
+// Returns an error when position is not a bit position in kind
+private fn validate_bits_position(kind generic, position i64) -> Error {
+    if position < 0 || position >= bits_width(kind) {
+        return error(.BITS_POSITION_OUT_OF_RANGE, "position ${position} is out of range, must be from 0 to ${bits_width(kind) - 1}")
+    }
+    return nil
+}
+
+#[doc("Counts the 1 bits in the passed value(value) of the passed unsigned integer type(kind)")]
+fn count_ones(kind generic, value kind) -> (i64, Error) {
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return MIN_BITS_COUNT, err
+    }
+    mut zero kind = 0
+    mut remaining kind = value
+    mut count i64 = 0
+    for position in range(0, bits_width(kind)) {
+        if remaining == zero {
+            break
+        }
+        remaining = remaining bit_and (remaining - 1)
+        count += 1
+    }
+    return count, nil
+}
+
+#[doc("Counts the 0 bits in the passed value(value) of the passed unsigned integer type(kind)")]
+fn count_zeros(kind generic, value kind) -> (i64, Error) {
+    mut ones, err = count_ones(kind, value)
+    if err != nil {
+        return MIN_BITS_COUNT, err
+    }
+    return bits_width(kind) - ones, nil
+}
+
+#[doc("Counts the 0 bits before the highest 1 bit of the passed value(value) of the passed unsigned integer type(kind). Returns the number of bits in kind when value is 0")]
+fn leading_zeros(kind generic, value kind) -> (i64, Error) {
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return MIN_BITS_COUNT, err
+    }
+    mut width i64 = bits_width(kind)
+    for position in range(0, width) {
+        if ((value bit_shift_right (width - 1 - position)) bit_and 1) == 1 {
+            return position, nil
+        }
+    }
+    return width, nil
+}
+
+#[doc("Counts the 0 bits after the lowest 1 bit of the passed value(value) of the passed unsigned integer type(kind). Returns the number of bits in kind when value is 0")]
+fn trailing_zeros(kind generic, value kind) -> (i64, Error) {
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return MIN_BITS_COUNT, err
+    }
+    mut width i64 = bits_width(kind)
+    for position in range(0, width) {
+        if ((value bit_shift_right position) bit_and 1) == 1 {
+            return position, nil
+        }
+    }
+    return width, nil
+}
+
+#[doc("Checks if the bit at the passed position(position) of the passed value(value) of the passed unsigned integer type(kind) is 1. Position 0 is the lowest bit")]
+fn is_bit_set(kind generic, value kind, position i64) -> (bool, Error) {
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return false, err
+    }
+    err = validate_bits_position(kind, position)
+    if err != nil {
+        return false, err
+    }
+    return ((value bit_shift_right position) bit_and 1) == 1, nil
+}
+
+#[doc("Sets the bit at the passed position(position) of the passed value(value) of the passed unsigned integer type(kind) to 1. Position 0 is the lowest bit")]
+fn set_bit(kind generic, value kind, position i64) -> (kind, Error) {
+    mut zero kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return zero, err
+    }
+    err = validate_bits_position(kind, position)
+    if err != nil {
+        return zero, err
+    }
+    mut one kind = 1
+    return value bit_or (one bit_shift_left position), nil
+}
+
+#[doc("Clears the bit at the passed position(position) of the passed value(value) of the passed unsigned integer type(kind) to 0. Position 0 is the lowest bit")]
+fn clear_bit(kind generic, value kind, position i64) -> (kind, Error) {
+    mut zero kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return zero, err
+    }
+    err = validate_bits_position(kind, position)
+    if err != nil {
+        return zero, err
+    }
+    mut one kind = 1
+    return value bit_and (bit_not (one bit_shift_left position)), nil
+}
+
+#[doc("Flips the bit at the passed position(position) of the passed value(value) of the passed unsigned integer type(kind). Position 0 is the lowest bit")]
+fn toggle_bit(kind generic, value kind, position i64) -> (kind, Error) {
+    mut zero kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return zero, err
+    }
+    err = validate_bits_position(kind, position)
+    if err != nil {
+        return zero, err
+    }
+    mut one kind = 1
+    return value bit_xor (one bit_shift_left position), nil
+}
+
+#[doc("Rotates the bits of the passed value(value) of the passed unsigned integer type(kind) left by the passed count(count), moving the bits that leave the top back in at the bottom")]
+fn rotate_left(kind generic, value kind, count i64) -> (kind, Error) {
+    mut zero kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return zero, err
+    }
+    if count < 0 {
+        return zero, error(.BITS_COUNT_OUT_OF_RANGE, "count ${count} is negative")
+    }
+    mut width i64 = bits_width(kind)
+    mut amount i64 = count % width
+    if amount == 0 {
+        return value, nil
+    }
+    return (value bit_shift_left amount) bit_or (value bit_shift_right (width - amount)), nil
+}
+
+#[doc("Rotates the bits of the passed value(value) of the passed unsigned integer type(kind) right by the passed count(count), moving the bits that leave the bottom back in at the top")]
+fn rotate_right(kind generic, value kind, count i64) -> (kind, Error) {
+    mut zero kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return zero, err
+    }
+    if count < 0 {
+        return zero, error(.BITS_COUNT_OUT_OF_RANGE, "count ${count} is negative")
+    }
+    mut width i64 = bits_width(kind)
+    mut amount i64 = count % width
+    if amount == 0 {
+        return value, nil
+    }
+    return (value bit_shift_right amount) bit_or (value bit_shift_left (width - amount)), nil
+}
+
+#[doc("Reverses the order of the bits of the passed value(value) of the passed unsigned integer type(kind)")]
+fn reverse_bits(kind generic, value kind) -> (kind, Error) {
+    mut result kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return result, err
+    }
+    mut remaining kind = value
+    for position in range(0, bits_width(kind)) {
+        result = (result bit_shift_left 1) bit_or (remaining bit_and 1)
+        remaining = remaining bit_shift_right 1
+    }
+    return result, nil
+}
+
+#[doc("Reverses the order of the bytes of the passed value(value) of the passed unsigned integer type(kind), converting between little and big endian")]
+fn swap_bytes(kind generic, value kind) -> (kind, Error) {
+    mut result kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return result, err
+    }
+    mut remaining kind = value
+    mut byteCount i64 = size_of(kind)
+    for position in range(0, byteCount) {
+        if position > 0 {
+            result = result bit_shift_left 8
+        }
+        result = result bit_or (remaining bit_and 0xFF)
+        if position < byteCount - 1 {
+            remaining = remaining bit_shift_right 8
+        }
+    }
+    return result, nil
+}
+
+#[doc("Checks if the passed value(value) of the passed unsigned integer type(kind) has an odd number of 1 bits")]
+fn has_odd_parity(kind generic, value kind) -> (bool, Error) {
+    mut ones, err = count_ones(kind, value)
+    if err != nil {
+        return false, err
+    }
+    return ones % 2 == 1, nil
+}
+
+#[doc("Checks if the passed value(value) of the passed unsigned integer type(kind) is a power of two")]
+fn is_power_of_two(kind generic, value kind) -> (bool, Error) {
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return false, err
+    }
+    mut zero kind = 0
+    return value != zero && (value bit_and (value - 1)) == zero, nil
+}
+
+#[doc("Extracts the passed count(count) of bits from the passed value(value) of the passed unsigned integer type(kind), starting at the passed position(start) and counting up from the lowest bit")]
+fn extract_bits(kind generic, value kind, start i64, count i64) -> (kind, Error) {
+    mut zero kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return zero, err
+    }
+    err = validate_bits_position(kind, start)
+    if err != nil {
+        return zero, err
+    }
+    mut width i64 = bits_width(kind)
+    if count < 1 || count > width - start {
+        return zero, error(.BITS_COUNT_OUT_OF_RANGE, "count ${count} is out of range, must be from 1 to ${width - start}")
+    }
+    mut ones kind = bit_not zero
+    mut mask kind = ones bit_shift_right (width - count)
+    return (value bit_shift_right start) bit_and mask, nil
+}
+
+#[doc("Writes the passed value(value) of the passed unsigned integer type(kind) as a string of 0 and 1 characters, one for every bit of kind")]
+fn to_binary_string(kind generic, value kind) -> (string, Error) {
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return "", err
+    }
+    mut width i64 = bits_width(kind)
+    mut text string = ""
+    for position in range(0, width) {
+        if ((value bit_shift_right (width - 1 - position)) bit_and 1) == 1 {
+            text = "${text}1"
+        } otherwise {
+            text = "${text}0"
+        }
+    }
+    return text, nil
+}
+
+#[doc("Reads the passed text(text) of 0 and 1 characters as a value of the passed unsigned integer type(kind). The text must be from 1 to the number of bits in kind characters long")]
+fn from_binary_string(kind generic, text string) -> (kind, Error) {
+    mut result kind = 0
+    mut err = validate_bits_kind(kind)
+    if err != nil {
+        return result, err
+    }
+    if len(text) < 1 || len(text) > bits_width(kind) {
+        return result, error(.BITS_INVALID_BINARY_STRING, "text is ${len(text)} characters long, must be from 1 to ${bits_width(kind)}")
+    }
+    for index in range(0, len(text)) {
+        result = result bit_shift_left 1
+        if text[index] == '1' {
+            result = result bit_or 1
+        } or text[index] != '0' {
+            mut zero kind = 0
+            return zero, error(.BITS_INVALID_BINARY_STRING, "text holds '${text[index]}', only 0 and 1 are allowed")
+        }
+    }
+    return result, nil
+}
