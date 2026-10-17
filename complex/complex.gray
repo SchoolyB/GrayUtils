@@ -1,0 +1,252 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_COMPLEX_VALUE f64 = -1.0e100
+private const MAX_COMPLEX_VALUE f64 = 1.0e100
+private const MIN_COMPLEX_MAGNITUDE f64 = 0.0
+
+#error_code
+private const ComplexErrorCodes enum {
+    COMPLEX_VAL_NEGATIVE
+    COMPLEX_VAL_NOT_A_NUMBER
+    COMPLEX_VAL_INFINITE
+    COMPLEX_VAL_TOO_LARGE
+    COMPLEX_DIVIDE_BY_ZERO
+    COMPLEX_ZERO_VALUE
+    COMPLEX_RESULT_OUT_OF_RANGE
+}
+
+// Returns an error when val is NaN, infinite or too large
+private fn validate_complex_value(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.COMPLEX_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.COMPLEX_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_COMPLEX_VALUE || val > MAX_COMPLEX_VALUE {
+        return error(.COMPLEX_VAL_TOO_LARGE, "Value ${val} out of range, max magnitude is ${MAX_COMPLEX_VALUE}")
+    }
+    return nil
+}
+
+// Returns an error when either part of number is invalid
+private fn validate_complex(number Complex) -> Error {
+    mut err = validate_complex_value(number.real)
+    if err != nil {
+        return err
+    }
+    return validate_complex_value(number.imaginary)
+}
+
+// Returns an error when either part of number overflowed or is not a number
+private fn validate_complex_result(number Complex) -> Error {
+    if !math.is_finite(number.real) || !math.is_finite(number.imaginary) {
+        return error(.COMPLEX_RESULT_OUT_OF_RANGE, "Result is out of range")
+    }
+    return nil
+}
+
+// Returns a complex number with both parts set to the minimum, returned alongside an error
+private fn invalid_complex() -> Complex {
+    return Complex{real: MIN_COMPLEX_VALUE, imaginary: MIN_COMPLEX_VALUE}
+}
+
+#doc("A complex number made of a real part and an imaginary part")
+const Complex struct {
+    real, imaginary f64
+
+    #doc("Creates a complex number from the passed magnitude(magnitude) and phase in radians(phase)")
+    fn from_polar(magnitude f64, phase f64) -> (Complex, Error) {
+        mut err = validate_complex_value(magnitude)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        if magnitude < MIN_COMPLEX_MAGNITUDE {
+            return invalid_complex(), error(.COMPLEX_VAL_NEGATIVE, "Magnitude ${magnitude} is negative, min is ${MIN_COMPLEX_MAGNITUDE}")
+        }
+        err = validate_complex_value(phase)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return Complex{real: magnitude * math.cos(phase), imaginary: magnitude * math.sin(phase)}, nil
+    }
+
+    #doc("Adds the passed complex numbers(left, right)")
+    fn add(left Complex, right Complex) -> (Complex, Error) {
+        mut err = validate_complex(left)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        err = validate_complex(right)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return Complex{real: left.real + right.real, imaginary: left.imaginary + right.imaginary}, nil
+    }
+
+    #doc("Subtracts the passed complex number(right) from the passed complex number(left)")
+    fn subtract(left Complex, right Complex) -> (Complex, Error) {
+        mut err = validate_complex(left)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        err = validate_complex(right)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return Complex{real: left.real - right.real, imaginary: left.imaginary - right.imaginary}, nil
+    }
+
+    #doc("Multiplies the passed complex numbers(left, right)")
+    fn multiply(left Complex, right Complex) -> (Complex, Error) {
+        mut err = validate_complex(left)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        err = validate_complex(right)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return Complex{real: left.real * right.real - left.imaginary * right.imaginary, imaginary: left.real * right.imaginary + left.imaginary * right.real}, nil
+    }
+
+    #doc("Divides the passed complex number(left) by the passed complex number(right). Returns an error if right is zero")
+    fn divide(left Complex, right Complex) -> (Complex, Error) {
+        mut err = validate_complex(left)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        err = validate_complex(right)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        if right.real == 0.0 && right.imaginary == 0.0 {
+            return invalid_complex(), error(.COMPLEX_DIVIDE_BY_ZERO, "Cannot divide by a complex number of zero")
+        }
+        mut quotient Complex = Complex{real: 0.0, imaginary: 0.0}
+        if math.abs(right.real) >= math.abs(right.imaginary) {
+            mut ratio f64 = right.imaginary / right.real
+            mut denominator f64 = right.real + right.imaginary * ratio
+            quotient = Complex{real: (left.real + left.imaginary * ratio) / denominator, imaginary: (left.imaginary - left.real * ratio) / denominator}
+        } otherwise {
+            mut ratio f64 = right.real / right.imaginary
+            mut denominator f64 = right.real * ratio + right.imaginary
+            quotient = Complex{real: (left.real * ratio + left.imaginary) / denominator, imaginary: (left.imaginary * ratio - left.real) / denominator}
+        }
+        err = validate_complex_result(quotient)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return quotient, nil
+    }
+
+    #doc("Negates both parts of the passed complex number(number)")
+    fn negate(number Complex) -> (Complex, Error) {
+        mut err = validate_complex(number)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return Complex{real: -number.real, imaginary: -number.imaginary}, nil
+    }
+
+    #doc("Finds the conjugate of the passed complex number(number), which has its imaginary part negated")
+    fn conjugate(number Complex) -> (Complex, Error) {
+        mut err = validate_complex(number)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return Complex{real: number.real, imaginary: -number.imaginary}, nil
+    }
+
+    #doc("Calculates the magnitude of the passed complex number(number)")
+    fn magnitude(number Complex) -> (f64, Error) {
+        mut err = validate_complex(number)
+        if err != nil {
+            return MIN_COMPLEX_VALUE, err
+        }
+        return math.hypot(number.real, number.imaginary), nil
+    }
+
+    #doc("Calculates the phase in radians of the passed complex number(number). Returns an error if it is zero")
+    fn phase(number Complex) -> (f64, Error) {
+        mut err = validate_complex(number)
+        if err != nil {
+            return MIN_COMPLEX_VALUE, err
+        }
+        if number.real == 0.0 && number.imaginary == 0.0 {
+            return MIN_COMPLEX_VALUE, error(.COMPLEX_ZERO_VALUE, "A complex number of zero has no phase")
+        }
+        return math.atan2(number.imaginary, number.real), nil
+    }
+
+    #doc("Calculates the principal square root of the passed complex number(number)")
+    fn sqrt(number Complex) -> (Complex, Error) {
+        mut err = validate_complex(number)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        mut size f64 = math.hypot(number.real, number.imaginary)
+        mut root Complex = Complex{real: math.sqrt((size + number.real) / 2.0), imaginary: math.sqrt((size - number.real) / 2.0)}
+        if number.imaginary < 0.0 {
+            root = Complex{real: root.real, imaginary: -root.imaginary}
+        }
+        return root, nil
+    }
+
+    #doc("Calculates e raised to the passed complex number(number)")
+    fn exp(number Complex) -> (Complex, Error) {
+        mut err = validate_complex(number)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        mut scale f64 = math.exp(number.real)
+        mut result Complex = Complex{real: scale * math.cos(number.imaginary), imaginary: scale * math.sin(number.imaginary)}
+        err = validate_complex_result(result)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return result, nil
+    }
+
+    #doc("Calculates the principal natural logarithm of the passed complex number(number). Returns an error if it is zero")
+    fn ln(number Complex) -> (Complex, Error) {
+        mut err = validate_complex(number)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        if number.real == 0.0 && number.imaginary == 0.0 {
+            return invalid_complex(), error(.COMPLEX_ZERO_VALUE, "A complex number of zero has no logarithm")
+        }
+        return Complex{real: math.log(math.hypot(number.real, number.imaginary)), imaginary: math.atan2(number.imaginary, number.real)}, nil
+    }
+
+    #doc("Raises the passed complex number(number) to the passed exponent(exponent) using its principal value. Returns an error if number is zero")
+    fn power(number Complex, exponent f64) -> (Complex, Error) {
+        mut err = validate_complex(number)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        err = validate_complex_value(exponent)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        if number.real == 0.0 && number.imaginary == 0.0 {
+            return invalid_complex(), error(.COMPLEX_ZERO_VALUE, "A complex number of zero cannot be raised to a power")
+        }
+        mut size f64 = math.pow(math.hypot(number.real, number.imaginary), exponent)
+        mut angle f64 = math.atan2(number.imaginary, number.real) * exponent
+        mut result Complex = Complex{real: size * math.cos(angle), imaginary: size * math.sin(angle)}
+        err = validate_complex_result(result)
+        if err != nil {
+            return invalid_complex(), err
+        }
+        return result, nil
+    }
+}
