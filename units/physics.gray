@@ -1,0 +1,257 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_PHYSICS_VALUE f64 = 0.0
+private const MAX_PHYSICS_VALUE f64 = 1.0e100
+private const MIN_PHYSICS_DIVISOR f64 = 1.0e-100
+
+
+/*********************************
+PHYSICS CONSTANTS
+*********************************/
+const STANDARD_GRAVITY_METERS_PER_SECOND_SQUARED f64 = 9.80665
+const STANDARD_GRAVITY_FEET_PER_SECOND_SQUARED f64 = 32.1740
+const SPEED_OF_LIGHT_METERS_PER_SECOND f64 = 299792458.0
+const SPEED_OF_SOUND_METERS_PER_SECOND f64 = 343.0
+const STANDARD_ATMOSPHERE_PASCALS f64 = 101325.0
+const PASCALS_PER_BAR f64 = 100000.0
+const PASCALS_PER_PSI f64 = 6894.76
+const PASCALS_PER_MILLIMETER_OF_MERCURY f64 = 133.322
+
+/*********************************
+PHYSICS ERROR CODES
+*********************************/
+#error_code
+private const PhysicsErrorCodes enum {
+    PHYSICS_VAL_NEGATIVE
+    PHYSICS_VAL_ZERO
+    PHYSICS_VAL_NOT_A_NUMBER
+    PHYSICS_VAL_INFINITE
+    PHYSICS_VAL_TOO_LARGE
+    PHYSICS_VAL_TOO_SMALL
+    PHYSICS_RESULT_OUT_OF_RANGE
+}
+
+private const PhysicsParameter enum {
+    FORCE = "force"
+    AREA = "area"
+    MASS = "mass"
+    ACCELERATION = "acceleration"
+    INITIAL_VELOCITY = "initial_velocity"
+    FINAL_VELOCITY = "final_velocity"
+    DURATION = "duration"
+    DISTANCE = "distance"
+}
+
+// Returns an error when val (the parameter name) is NaN, infinite or too large
+private fn validate_physics(val f64, name PhysicsParameter) -> Error {
+    if math.is_nan(val) {
+        return error(.PHYSICS_VAL_NOT_A_NUMBER, "${name} is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.PHYSICS_VAL_INFINITE, "${name} is infinite")
+    }
+    if val > MAX_PHYSICS_VALUE || val < -MAX_PHYSICS_VALUE {
+        return error(.PHYSICS_VAL_TOO_LARGE, "${name} ${val} is out of range, max magnitude is ${MAX_PHYSICS_VALUE}")
+    }
+    return nil
+}
+
+// Returns an error when val is invalid, negative or zero; for values that are divided by
+private fn validate_divisor(val f64, name PhysicsParameter) -> Error {
+    mut err = validate_physics(val, name)
+    if err != nil {
+        return err
+    }
+    if val < MIN_PHYSICS_VALUE {
+        return error(.PHYSICS_VAL_NEGATIVE, "${name} ${val} is negative, min is ${MIN_PHYSICS_VALUE}")
+    }
+    if val == MIN_PHYSICS_VALUE {
+        return error(.PHYSICS_VAL_ZERO, "${name} must not be zero")
+    }
+    if val < MIN_PHYSICS_DIVISOR {
+        return error(.PHYSICS_VAL_TOO_SMALL, "${name} ${val} is too small, min is ${MIN_PHYSICS_DIVISOR}")
+    }
+    return nil
+}
+
+// Returns an error when result overflowed or is not a number
+private fn validate_result(result f64) -> Error {
+    if !math.is_finite(result) {
+        return error(.PHYSICS_RESULT_OUT_OF_RANGE, "Result is out of range")
+    }
+    return nil
+}
+
+/*********************************
+PRESSURE & FORCE FUNCTIONS
+*********************************/
+#[doc("Calculates the pressure from the passed force(force) and area(area)")]
+fn calculate_pressure(force f64, area f64) -> (f64, Error) {
+    mut err = validate_physics(force, .FORCE)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_divisor(area, .AREA)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    mut result = force / area
+    err = validate_result(result)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates the force from the passed mass(mass) and acceleration(acceleration)")]
+fn calculate_force(mass f64, acceleration f64) -> (f64, Error) {
+    mut err = validate_physics(mass, .MASS)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    if mass < MIN_PHYSICS_VALUE {
+        return MIN_PHYSICS_VALUE, error(.PHYSICS_VAL_NEGATIVE, "mass ${mass} is negative, min is ${MIN_PHYSICS_VALUE}")
+    }
+    err = validate_physics(acceleration, .ACCELERATION)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    return mass * acceleration, nil
+}
+
+/*********************************
+ACCELERATION FUNCTIONS
+*********************************/
+#[doc("Calculates acceleration from the passed initial velocity(initialVelocity), final velocity(finalVelocity) and duration(duration)")]
+fn calculate_acceleration_from_velocity_time(initialVelocity f64, finalVelocity f64, duration f64) -> (f64, Error) {
+    mut err = validate_physics(initialVelocity, .INITIAL_VELOCITY)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_physics(finalVelocity, .FINAL_VELOCITY)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_divisor(duration, .DURATION)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    mut result = (finalVelocity - initialVelocity) / duration
+    err = validate_result(result)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates acceleration from the passed initial velocity(initialVelocity), final velocity(finalVelocity) and distance(distance)")]
+fn calculate_acceleration_from_velocity_distance(initialVelocity f64, finalVelocity f64, distance f64) -> (f64, Error) {
+    mut err = validate_physics(initialVelocity, .INITIAL_VELOCITY)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_physics(finalVelocity, .FINAL_VELOCITY)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_physics(distance, .DISTANCE)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    if distance == MIN_PHYSICS_VALUE {
+        return MIN_PHYSICS_VALUE, error(.PHYSICS_VAL_ZERO, "distance must not be zero")
+    }
+    mut result = ((finalVelocity * finalVelocity) - (initialVelocity * initialVelocity)) / (2.0 * distance)
+    err = validate_result(result)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates acceleration from the passed initial velocity(initialVelocity), duration(duration) and distance(distance)")]
+fn calculate_acceleration_from_initial_time_distance(initialVelocity f64, duration f64, distance f64) -> (f64, Error) {
+    mut err = validate_physics(initialVelocity, .INITIAL_VELOCITY)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_divisor(duration, .DURATION)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_physics(distance, .DISTANCE)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    mut result = 2.0 * (distance - (initialVelocity * duration)) / (duration * duration)
+    err = validate_result(result)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates acceleration from the passed final velocity(finalVelocity), duration(duration) and distance(distance)")]
+fn calculate_acceleration_from_final_time_distance(finalVelocity f64, duration f64, distance f64) -> (f64, Error) {
+    mut err = validate_physics(finalVelocity, .FINAL_VELOCITY)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_divisor(duration, .DURATION)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_physics(distance, .DISTANCE)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    mut result = 2.0 * ((finalVelocity * duration) - distance) / (duration * duration)
+    err = validate_result(result)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates acceleration of an object starting from rest from the passed duration(duration) and distance(distance)")]
+fn calculate_acceleration_from_rest(duration f64, distance f64) -> (f64, Error) {
+    mut err = validate_divisor(duration, .DURATION)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_physics(distance, .DISTANCE)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    mut result = (2.0 * distance) / (duration * duration)
+    err = validate_result(result)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates acceleration from the passed force(force) and mass(mass)")]
+fn calculate_force_to_acceleration(force f64, mass f64) -> (f64, Error) {
+    mut err = validate_physics(force, .FORCE)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    err = validate_divisor(mass, .MASS)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    mut result = force / mass
+    err = validate_result(result)
+    if err != nil {
+        return MIN_PHYSICS_VALUE, err
+    }
+    return result, nil
+}
