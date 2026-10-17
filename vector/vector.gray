@@ -1,0 +1,336 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_VECTOR_VALUE f64 = -1.0e100
+private const MAX_VECTOR_VALUE f64 = 1.0e100
+
+#error_code
+private const VectorErrorCodes enum {
+    VECTOR_VAL_NOT_A_NUMBER
+    VECTOR_VAL_INFINITE
+    VECTOR_VAL_TOO_LARGE
+    VECTOR_ZERO_LENGTH
+}
+
+// Returns an error when val is NaN, infinite or too large
+private fn validate_component(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.VECTOR_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.VECTOR_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_VECTOR_VALUE || val > MAX_VECTOR_VALUE {
+        return error(.VECTOR_VAL_TOO_LARGE, "Value ${val} out of range, max magnitude is ${MAX_VECTOR_VALUE}")
+    }
+    return nil
+}
+
+// Returns an error when any component of vector is invalid
+private fn validate_vector2d(vector Vector2D) -> Error {
+    mut err = validate_component(vector.x)
+    if err != nil {
+        return err
+    }
+    err = validate_component(vector.y)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+#doc("A 2D vector with f64 components")
+const Vector2D struct {
+    x, y f64
+
+    #doc("Adds the passed vectors(left, right)")
+    fn add(left Vector2D, right Vector2D) -> (Vector2D, Error) {
+        mut err = validate_vector2d(left)
+        if err != nil {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, err
+        }
+        err = validate_vector2d(right)
+        if err != nil {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, err
+        }
+        return Vector2D{x: left.x + right.x, y: left.y + right.y}, nil
+    }
+
+    #doc("Subtracts the passed vector(right) from the passed vector(left)")
+    fn subtract(left Vector2D, right Vector2D) -> (Vector2D, Error) {
+        mut err = validate_vector2d(left)
+        if err != nil {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, err
+        }
+        err = validate_vector2d(right)
+        if err != nil {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, err
+        }
+        return Vector2D{x: left.x - right.x, y: left.y - right.y}, nil
+    }
+
+    #doc("Multiplies each component of the passed vector(vector) by the passed factor(factor)")
+    fn scale(vector Vector2D, factor f64) -> (Vector2D, Error) {
+        mut err = validate_vector2d(vector)
+        if err != nil {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, err
+        }
+        err = validate_component(factor)
+        if err != nil {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, err
+        }
+        return Vector2D{x: vector.x * factor, y: vector.y * factor}, nil
+    }
+
+    #doc("Negates each component of the passed vector(vector)")
+    fn negate(vector Vector2D) -> (Vector2D, Error) {
+        mut err = validate_vector2d(vector)
+        if err != nil {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, err
+        }
+        return Vector2D{x: -vector.x, y: -vector.y}, nil
+    }
+
+    #doc("Calculates the dot product of the passed vectors(left, right)")
+    fn dot(left Vector2D, right Vector2D) -> (f64, Error) {
+        mut err = validate_vector2d(left)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        err = validate_vector2d(right)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        return left.x * right.x + left.y * right.y, nil
+    }
+
+    #doc("Calculates the squared length of the passed vector(vector)")
+    fn length_squared(vector Vector2D) -> (f64, Error) {
+        mut err = validate_vector2d(vector)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        return vector.x * vector.x + vector.y * vector.y, nil
+    }
+
+    #doc("Calculates the length of the passed vector(vector)")
+    fn length(vector Vector2D) -> (f64, Error) {
+        mut err = validate_vector2d(vector)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        return math.hypot(vector.x, vector.y), nil
+    }
+
+    #doc("Calculates the distance between the passed vectors(first, second)")
+    fn distance(first Vector2D, second Vector2D) -> (f64, Error) {
+        mut err = validate_vector2d(first)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        err = validate_vector2d(second)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        mut difference Vector2D = Vector2D{x: first.x - second.x, y: first.y - second.y}
+        return math.hypot(difference.x, difference.y), nil
+    }
+
+    #doc("Scales the passed vector(vector) to a length of 1.0. Returns an error if its length is 0.0")
+    fn normalize(vector Vector2D) -> (Vector2D, Error) {
+        mut err = validate_vector2d(vector)
+        if err != nil {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, err
+        }
+        mut magnitude f64 = math.hypot(vector.x, vector.y)
+        if magnitude == 0.0 {
+            return Vector2D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE}, error(.VECTOR_ZERO_LENGTH, "Vector has a length of 0.0")
+        }
+        return Vector2D{x: vector.x / magnitude, y: vector.y / magnitude}, nil
+    }
+
+    #doc("Calculates the angle in radians between the passed vectors(left, right). Returns an error if either has a length of 0.0")
+    fn angle_between(left Vector2D, right Vector2D) -> (f64, Error) {
+        mut err = validate_vector2d(left)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        err = validate_vector2d(right)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        mut leftLength f64 = math.hypot(left.x, left.y)
+        mut rightLength f64 = math.hypot(right.x, right.y)
+        if leftLength == 0.0 || rightLength == 0.0 {
+            return MIN_VECTOR_VALUE, error(.VECTOR_ZERO_LENGTH, "Vector has a length of 0.0")
+        }
+        mut cosine f64 = (left.x * right.x + left.y * right.y) / (leftLength * rightLength)
+        return math.acos(math.clamp(cosine, -1.0, 1.0)), nil
+    }
+}
+
+// Returns an error when any component of vector is invalid
+private fn validate_vector3d(vector Vector3D) -> Error {
+    mut err = validate_component(vector.x)
+    if err != nil {
+        return err
+    }
+    err = validate_component(vector.y)
+    if err != nil {
+        return err
+    }
+    err = validate_component(vector.z)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+#doc("A 3D vector with f64 components")
+const Vector3D struct {
+    x, y, z f64
+
+    #doc("Adds the passed vectors(left, right)")
+    fn add(left Vector3D, right Vector3D) -> (Vector3D, Error) {
+        mut err = validate_vector3d(left)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        err = validate_vector3d(right)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        return Vector3D{x: left.x + right.x, y: left.y + right.y, z: left.z + right.z}, nil
+    }
+
+    #doc("Subtracts the passed vector(right) from the passed vector(left)")
+    fn subtract(left Vector3D, right Vector3D) -> (Vector3D, Error) {
+        mut err = validate_vector3d(left)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        err = validate_vector3d(right)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        return Vector3D{x: left.x - right.x, y: left.y - right.y, z: left.z - right.z}, nil
+    }
+
+    #doc("Multiplies each component of the passed vector(vector) by the passed factor(factor)")
+    fn scale(vector Vector3D, factor f64) -> (Vector3D, Error) {
+        mut err = validate_vector3d(vector)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        err = validate_component(factor)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        return Vector3D{x: vector.x * factor, y: vector.y * factor, z: vector.z * factor}, nil
+    }
+
+    #doc("Negates each component of the passed vector(vector)")
+    fn negate(vector Vector3D) -> (Vector3D, Error) {
+        mut err = validate_vector3d(vector)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        return Vector3D{x: -vector.x, y: -vector.y, z: -vector.z}, nil
+    }
+
+    #doc("Calculates the dot product of the passed vectors(left, right)")
+    fn dot(left Vector3D, right Vector3D) -> (f64, Error) {
+        mut err = validate_vector3d(left)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        err = validate_vector3d(right)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        return left.x * right.x + left.y * right.y + left.z * right.z, nil
+    }
+
+    #doc("Calculates the squared length of the passed vector(vector)")
+    fn length_squared(vector Vector3D) -> (f64, Error) {
+        mut err = validate_vector3d(vector)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        return vector.x * vector.x + vector.y * vector.y + vector.z * vector.z, nil
+    }
+
+    #doc("Calculates the length of the passed vector(vector)")
+    fn length(vector Vector3D) -> (f64, Error) {
+        mut err = validate_vector3d(vector)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        return math.hypot(math.hypot(vector.x, vector.y), vector.z), nil
+    }
+
+    #doc("Calculates the distance between the passed vectors(first, second)")
+    fn distance(first Vector3D, second Vector3D) -> (f64, Error) {
+        mut err = validate_vector3d(first)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        err = validate_vector3d(second)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        mut difference Vector3D = Vector3D{x: first.x - second.x, y: first.y - second.y, z: first.z - second.z}
+        return math.hypot(math.hypot(difference.x, difference.y), difference.z), nil
+    }
+
+    #doc("Scales the passed vector(vector) to a length of 1.0. Returns an error if its length is 0.0")
+    fn normalize(vector Vector3D) -> (Vector3D, Error) {
+        mut err = validate_vector3d(vector)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        mut magnitude f64 = math.hypot(math.hypot(vector.x, vector.y), vector.z)
+        if magnitude == 0.0 {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, error(.VECTOR_ZERO_LENGTH, "Vector has a length of 0.0")
+        }
+        return Vector3D{x: vector.x / magnitude, y: vector.y / magnitude, z: vector.z / magnitude}, nil
+    }
+
+    #doc("Calculates the angle in radians between the passed vectors(left, right). Returns an error if either has a length of 0.0")
+    fn angle_between(left Vector3D, right Vector3D) -> (f64, Error) {
+        mut err = validate_vector3d(left)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        err = validate_vector3d(right)
+        if err != nil {
+            return MIN_VECTOR_VALUE, err
+        }
+        mut leftLength f64 = math.hypot(math.hypot(left.x, left.y), left.z)
+        mut rightLength f64 = math.hypot(math.hypot(right.x, right.y), right.z)
+        if leftLength == 0.0 || rightLength == 0.0 {
+            return MIN_VECTOR_VALUE, error(.VECTOR_ZERO_LENGTH, "Vector has a length of 0.0")
+        }
+        mut cosine f64 = (left.x * right.x + left.y * right.y + left.z * right.z) / (leftLength * rightLength)
+        return math.acos(math.clamp(cosine, -1.0, 1.0)), nil
+    }
+
+    #doc("Calculates the cross product of the passed vectors(left, right)")
+    fn cross(left Vector3D, right Vector3D) -> (Vector3D, Error) {
+        mut err = validate_vector3d(left)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        err = validate_vector3d(right)
+        if err != nil {
+            return Vector3D{x: MIN_VECTOR_VALUE, y: MIN_VECTOR_VALUE, z: MIN_VECTOR_VALUE}, err
+        }
+        return Vector3D{x: left.y * right.z - left.z * right.y, y: left.z * right.x - left.x * right.z, z: left.x * right.y - left.y * right.x}, nil
+    }
+}
