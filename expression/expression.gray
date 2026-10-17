@@ -1,0 +1,510 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @arrays
+import @math
+import @strconv
+import @strings
+
+//INTERNAL CONSTANTS
+private const MIN_EXPRESSION_VALUE f64 = -1.0e300
+private const MAX_EXPRESSION_LENGTH i64 = 10000
+private const MAX_EXPRESSION_DEPTH i64 = 200
+
+#error_code
+private const ExpressionErrorCodes enum {
+    EXPRESSION_EMPTY
+    EXPRESSION_TOO_LONG
+    EXPRESSION_TOO_DEEP
+    EXPRESSION_UNEXPECTED_CHARACTER
+    EXPRESSION_UNEXPECTED_END
+    EXPRESSION_UNBALANCED_PARENTHESES
+    EXPRESSION_INVALID_NUMBER
+    EXPRESSION_UNKNOWN_NAME
+    EXPRESSION_UNKNOWN_FUNCTION
+    EXPRESSION_WRONG_ARGUMENT_COUNT
+    EXPRESSION_DIVIDE_BY_ZERO
+    EXPRESSION_DOMAIN_ERROR
+    EXPRESSION_RESULT_OUT_OF_RANGE
+    EXPRESSION_VARIABLE_MISMATCH
+    EXPRESSION_INVALID_VARIABLE
+}
+
+private const ExpressionParser struct {
+    text string
+    position, depth i64
+    names [string]
+    values [f64]
+}
+
+// Returns the character at the parser's position, or 0 when it is at the end of the text
+private fn expression_peek(parser ExpressionParser) -> char {
+    if parser.position >= len(parser.text) {
+        return cast(0, char)
+    }
+    return parser.text[parser.position]
+}
+
+// Returns the character offset places after the parser's position, or 0 when that is past the end of the text
+private fn expression_peek_at(parser ExpressionParser, offset i64) -> char {
+    if parser.position + offset >= len(parser.text) {
+        return cast(0, char)
+    }
+    return parser.text[parser.position + offset]
+}
+
+// Moves the parser past any spaces, tabs and line breaks
+private fn expression_skip_whitespace(&parser ExpressionParser) {
+    as_long_as expression_peek(parser) == ' ' || expression_peek(parser) == '\t' || expression_peek(parser) == '\n' || expression_peek(parser) == '\r' {
+        parser.position += 1
+    }
+}
+
+// Returns true when c is a digit
+private fn expression_is_digit(c char) -> bool {
+    return c >= '0' && c <= '9'
+}
+
+// Returns true when c can start a name
+private fn expression_is_name_start(c char) -> bool {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+// Returns true when c can be part of a name
+private fn expression_is_name_char(c char) -> bool {
+    return expression_is_name_start(c) || expression_is_digit(c)
+}
+
+// Returns an error when result is not a number or overflowed
+private fn check_expression_result(result f64, parser ExpressionParser) -> Error {
+    if math.is_nan(result) {
+        return error(.EXPRESSION_DOMAIN_ERROR, "Result is not a number at position ${parser.position}")
+    }
+    if math.is_infinite(result) {
+        return error(.EXPRESSION_RESULT_OUT_OF_RANGE, "Result is out of range at position ${parser.position}")
+    }
+    return nil
+}
+
+// Returns an error when the parser is nested more than the max depth
+private fn enter_expression_depth(&parser ExpressionParser) -> Error {
+    parser.depth += 1
+    if parser.depth > MAX_EXPRESSION_DEPTH {
+        return error(.EXPRESSION_TOO_DEEP, "Expression is nested more than ${MAX_EXPRESSION_DEPTH} levels deep")
+    }
+    return nil
+}
+
+// Returns an error when name is not a valid variable name
+private fn validate_expression_name(name string) -> Error {
+    if len(name) == 0 || !expression_is_name_start(name[0]) {
+        return error(.EXPRESSION_INVALID_VARIABLE, "'${name}' is not a valid variable name")
+    }
+    for index in range(1, len(name)) {
+        if !expression_is_name_char(name[index]) {
+            return error(.EXPRESSION_INVALID_VARIABLE, "'${name}' is not a valid variable name")
+        }
+    }
+    return nil
+}
+
+// Reads a number such as 12, 3.5, .5 or 2e-3 at the parser's position
+private fn parse_expression_number(&parser ExpressionParser) -> (f64, Error) {
+    mut start i64 = parser.position
+    as_long_as expression_is_digit(expression_peek(parser)) {
+        parser.position += 1
+    }
+    if expression_peek(parser) == '.' {
+        parser.position += 1
+        as_long_as expression_is_digit(expression_peek(parser)) {
+            parser.position += 1
+        }
+    }
+    if expression_peek(parser) == 'e' || expression_peek(parser) == 'E' {
+        mut next char = expression_peek_at(parser, 1)
+        if expression_is_digit(next) {
+            parser.position += 1
+        } or (next == '+' || next == '-') && expression_is_digit(expression_peek_at(parser, 2)) {
+            parser.position += 2
+        }
+        as_long_as expression_is_digit(expression_peek(parser)) {
+            parser.position += 1
+        }
+    }
+    mut text string = strings.slice(parser.text, start, parser.position)
+    mut number, err = strconv.to_f64(text)
+    if err != nil {
+        return MIN_EXPRESSION_VALUE, error(.EXPRESSION_INVALID_NUMBER, "'${text}' is not a valid number at position ${start}")
+    }
+    return number, nil
+}
+
+// Returns an error when args does not hold the count wanted by function name
+private fn expect_expression_arguments(name string, args [f64], count i64) -> Error {
+    if len(args) != count {
+        return error(.EXPRESSION_WRONG_ARGUMENT_COUNT, "${name} takes ${count} arguments but ${len(args)} were given")
+    }
+    return nil
+}
+
+// Calls the built in function name with args
+private fn call_expression_function(name string, args [f64], parser ExpressionParser) -> (f64, Error) {
+    mut result f64 = 0.0
+    mut err Error = nil
+    if name == "min" || name == "max" {
+        if len(args) < 1 {
+            return MIN_EXPRESSION_VALUE, error(.EXPRESSION_WRONG_ARGUMENT_COUNT, "${name} takes at least 1 argument but 0 were given")
+        }
+        result = args[0]
+        for index in range(1, len(args)) {
+            if name == "min" && args[index] < result {
+                result = args[index]
+            } or name == "max" && args[index] > result {
+                result = args[index]
+            }
+        }
+        return result, nil
+    }
+    if name == "pow" || name == "atan2" || name == "hypot" {
+        err = expect_expression_arguments(name, args, 2)
+        if err != nil {
+            return MIN_EXPRESSION_VALUE, err
+        }
+        if name == "pow" {
+            result = math.pow(args[0], args[1])
+        } or name == "atan2" {
+            result = math.atan2(args[0], args[1])
+        } otherwise {
+            result = math.hypot(args[0], args[1])
+        }
+        err = check_expression_result(result, parser)
+        if err != nil {
+            return MIN_EXPRESSION_VALUE, err
+        }
+        return result, nil
+    }
+    if name == "sqrt" || name == "cbrt" || name == "abs" || name == "sin" || name == "cos" || name == "tan" || name == "asin" || name == "acos" || name == "atan" || name == "ln" || name == "log2" || name == "log10" || name == "exp" || name == "floor" || name == "ceil" || name == "round" || name == "trunc" {
+        err = expect_expression_arguments(name, args, 1)
+        if err != nil {
+            return MIN_EXPRESSION_VALUE, err
+        }
+        mut argument f64 = args[0]
+        if name == "sqrt" && argument < 0.0 {
+            return MIN_EXPRESSION_VALUE, error(.EXPRESSION_DOMAIN_ERROR, "sqrt of ${argument} is not a real number")
+        }
+        if (name == "ln" || name == "log2" || name == "log10") && argument <= 0.0 {
+            return MIN_EXPRESSION_VALUE, error(.EXPRESSION_DOMAIN_ERROR, "${name} of ${argument} is not a real number")
+        }
+        if (name == "asin" || name == "acos") && (argument < -1.0 || argument > 1.0) {
+            return MIN_EXPRESSION_VALUE, error(.EXPRESSION_DOMAIN_ERROR, "${name} of ${argument} is not a real number")
+        }
+        if name == "sqrt" {
+            result = math.sqrt(argument)
+        } or name == "cbrt" {
+            result = math.cbrt(argument)
+        } or name == "abs" {
+            result = math.abs(argument)
+        } or name == "sin" {
+            result = math.sin(argument)
+        } or name == "cos" {
+            result = math.cos(argument)
+        } or name == "tan" {
+            result = math.tan(argument)
+        } or name == "asin" {
+            result = math.asin(argument)
+        } or name == "acos" {
+            result = math.acos(argument)
+        } or name == "atan" {
+            result = math.atan(argument)
+        } or name == "ln" {
+            result = math.log(argument)
+        } or name == "log2" {
+            result = math.log2(argument)
+        } or name == "log10" {
+            result = math.log10(argument)
+        } or name == "exp" {
+            result = math.exp(argument)
+        } or name == "floor" {
+            result = math.floor(argument)
+        } or name == "ceil" {
+            result = math.ceil(argument)
+        } or name == "round" {
+            result = math.round(argument)
+        } otherwise {
+            result = math.trunc(argument)
+        }
+        err = check_expression_result(result, parser)
+        if err != nil {
+            return MIN_EXPRESSION_VALUE, err
+        }
+        return result, nil
+    }
+    return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNKNOWN_FUNCTION, "Unknown function '${name}' at position ${parser.position}")
+}
+
+// Reads a name at the parser's position and returns the value of the variable, constant or function call it stands for
+private fn parse_expression_name(&parser ExpressionParser) -> (f64, Error) {
+    mut start i64 = parser.position
+    as_long_as expression_is_name_char(expression_peek(parser)) {
+        parser.position += 1
+    }
+    mut name string = strings.slice(parser.text, start, parser.position)
+    expression_skip_whitespace(parser)
+    if expression_peek(parser) == '(' {
+        parser.position += 1
+        mut depthErr = enter_expression_depth(parser)
+        if depthErr != nil {
+            return MIN_EXPRESSION_VALUE, depthErr
+        }
+        mut args [f64] = {}
+        expression_skip_whitespace(parser)
+        if expression_peek(parser) == ')' {
+            parser.position += 1
+        } otherwise {
+            for index in range(0, MAX_EXPRESSION_LENGTH) {
+                mut argument, argumentErr = parse_expression_sum(parser)
+                if argumentErr != nil {
+                    return MIN_EXPRESSION_VALUE, argumentErr
+                }
+                arrays.append(args, argument)
+                expression_skip_whitespace(parser)
+                if expression_peek(parser) == ',' {
+                    parser.position += 1
+                } or expression_peek(parser) == ')' {
+                    parser.position += 1
+                    break
+                } or parser.position >= len(parser.text) {
+                    return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNBALANCED_PARENTHESES, "Missing ) for the call to ${name}")
+                } otherwise {
+                    return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNEXPECTED_CHARACTER, "Unexpected '${expression_peek(parser)}' at position ${parser.position}")
+                }
+            }
+        }
+        parser.depth -= 1
+        mut called, calledErr = call_expression_function(name, args, parser)
+        return called, calledErr
+    }
+    for index in range(0, len(parser.names)) {
+        if parser.names[index] == name {
+            return parser.values[index], nil
+        }
+    }
+    if name == "pi" {
+        return math.PI, nil
+    }
+    if name == "e" {
+        return math.E, nil
+    }
+    if name == "tau" {
+        return math.TAU, nil
+    }
+    return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNKNOWN_NAME, "Unknown name '${name}' at position ${start}")
+}
+
+// Reads a number, a name, or an expression in parentheses at the parser's position
+private fn parse_expression_primary(&parser ExpressionParser) -> (f64, Error) {
+    expression_skip_whitespace(parser)
+    if parser.position >= len(parser.text) {
+        return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNEXPECTED_END, "Expression ends where a value was expected")
+    }
+    mut c char = expression_peek(parser)
+    if c == '(' {
+        parser.position += 1
+        mut depthErr = enter_expression_depth(parser)
+        if depthErr != nil {
+            return MIN_EXPRESSION_VALUE, depthErr
+        }
+        mut inner, innerErr = parse_expression_sum(parser)
+        if innerErr != nil {
+            return MIN_EXPRESSION_VALUE, innerErr
+        }
+        expression_skip_whitespace(parser)
+        if expression_peek(parser) != ')' {
+            if parser.position >= len(parser.text) {
+                return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNBALANCED_PARENTHESES, "Missing ) at the end of the expression")
+            }
+            return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNEXPECTED_CHARACTER, "Unexpected '${expression_peek(parser)}' at position ${parser.position}")
+        }
+        parser.position += 1
+        parser.depth -= 1
+        return inner, nil
+    }
+    if expression_is_digit(c) || (c == '.' && expression_is_digit(expression_peek_at(parser, 1))) {
+        mut number, numberErr = parse_expression_number(parser)
+        return number, numberErr
+    }
+    if expression_is_name_start(c) {
+        mut named, namedErr = parse_expression_name(parser)
+        return named, namedErr
+    }
+    return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNEXPECTED_CHARACTER, "Unexpected '${c}' at position ${parser.position}")
+}
+
+// Reads a value optionally raised to a power with ^, which groups from the right
+private fn parse_expression_power(&parser ExpressionParser) -> (f64, Error) {
+    mut base, baseErr = parse_expression_primary(parser)
+    if baseErr != nil {
+        return MIN_EXPRESSION_VALUE, baseErr
+    }
+    expression_skip_whitespace(parser)
+    if expression_peek(parser) != '^' {
+        return base, nil
+    }
+    parser.position += 1
+    mut exponent, exponentErr = parse_expression_unary(parser)
+    if exponentErr != nil {
+        return MIN_EXPRESSION_VALUE, exponentErr
+    }
+    if base == 0.0 && exponent < 0.0 {
+        return MIN_EXPRESSION_VALUE, error(.EXPRESSION_DIVIDE_BY_ZERO, "Cannot raise 0 to the negative power ${exponent}")
+    }
+    mut result f64 = math.pow(base, exponent)
+    mut err = check_expression_result(result, parser)
+    if err != nil {
+        return MIN_EXPRESSION_VALUE, err
+    }
+    return result, nil
+}
+
+// Reads a value with any leading + or - signs
+private fn parse_expression_unary(&parser ExpressionParser) -> (f64, Error) {
+    expression_skip_whitespace(parser)
+    mut c char = expression_peek(parser)
+    if c == '-' || c == '+' {
+        parser.position += 1
+        mut depthErr = enter_expression_depth(parser)
+        if depthErr != nil {
+            return MIN_EXPRESSION_VALUE, depthErr
+        }
+        mut value, valueErr = parse_expression_unary(parser)
+        if valueErr != nil {
+            return MIN_EXPRESSION_VALUE, valueErr
+        }
+        parser.depth -= 1
+        if c == '-' {
+            return -value, nil
+        }
+        return value, nil
+    }
+    mut powered, poweredErr = parse_expression_power(parser)
+    return powered, poweredErr
+}
+
+// Reads values joined by *, / and %
+private fn parse_expression_term(&parser ExpressionParser) -> (f64, Error) {
+    mut left, leftErr = parse_expression_unary(parser)
+    if leftErr != nil {
+        return MIN_EXPRESSION_VALUE, leftErr
+    }
+    for index in range(0, MAX_EXPRESSION_LENGTH) {
+        expression_skip_whitespace(parser)
+        mut operator char = expression_peek(parser)
+        if operator != '*' && operator != '/' && operator != '%' {
+            break
+        }
+        parser.position += 1
+        mut right, rightErr = parse_expression_unary(parser)
+        if rightErr != nil {
+            return MIN_EXPRESSION_VALUE, rightErr
+        }
+        if operator == '*' {
+            left = left * right
+        } otherwise {
+            if right == 0.0 {
+                return MIN_EXPRESSION_VALUE, error(.EXPRESSION_DIVIDE_BY_ZERO, "Division by zero at position ${parser.position}")
+            }
+            if operator == '/' {
+                left = left / right
+            } otherwise {
+                left = math.mod(left, right)
+            }
+        }
+        mut err = check_expression_result(left, parser)
+        if err != nil {
+            return MIN_EXPRESSION_VALUE, err
+        }
+    }
+    return left, nil
+}
+
+// Reads terms joined by + and -
+private fn parse_expression_sum(&parser ExpressionParser) -> (f64, Error) {
+    mut left, leftErr = parse_expression_term(parser)
+    if leftErr != nil {
+        return MIN_EXPRESSION_VALUE, leftErr
+    }
+    for index in range(0, MAX_EXPRESSION_LENGTH) {
+        expression_skip_whitespace(parser)
+        mut operator char = expression_peek(parser)
+        if operator != '+' && operator != '-' {
+            break
+        }
+        parser.position += 1
+        mut right, rightErr = parse_expression_term(parser)
+        if rightErr != nil {
+            return MIN_EXPRESSION_VALUE, rightErr
+        }
+        if operator == '+' {
+            left = left + right
+        } otherwise {
+            left = left - right
+        }
+        mut err = check_expression_result(left, parser)
+        if err != nil {
+            return MIN_EXPRESSION_VALUE, err
+        }
+    }
+    return left, nil
+}
+
+// Evaluates text with the passed variables
+private fn run_expression(text string, names [string], values [f64]) -> (f64, Error) {
+    if len(strings.trim(text)) == 0 {
+        return MIN_EXPRESSION_VALUE, error(.EXPRESSION_EMPTY, "Expression is empty")
+    }
+    if len(text) > MAX_EXPRESSION_LENGTH {
+        return MIN_EXPRESSION_VALUE, error(.EXPRESSION_TOO_LONG, "Expression is ${len(text)} characters long, max is ${MAX_EXPRESSION_LENGTH}")
+    }
+    mut parser ExpressionParser = ExpressionParser{text: text, position: 0, depth: 0, names: names, values: values}
+    mut result, err = parse_expression_sum(parser)
+    if err != nil {
+        return MIN_EXPRESSION_VALUE, err
+    }
+    expression_skip_whitespace(parser)
+    if parser.position < len(parser.text) {
+        if expression_peek(parser) == ')' {
+            return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNBALANCED_PARENTHESES, "Unexpected ) at position ${parser.position}")
+        }
+        return MIN_EXPRESSION_VALUE, error(.EXPRESSION_UNEXPECTED_CHARACTER, "Unexpected '${expression_peek(parser)}' at position ${parser.position}")
+    }
+    return result, nil
+}
+
+#[doc("Evaluates the passed text(text), a math expression such as \"2 * (3 + 4)\". Supports + - * / % ^, parentheses, the constants pi, e and tau, and the functions sqrt, cbrt, abs, sin, cos, tan, asin, acos, atan, atan2, ln, log2, log10, exp, floor, ceil, round, trunc, pow, hypot, min and max")]
+fn evaluate(text string) -> (f64, Error) {
+    mut names [string] = {}
+    mut values [f64] = {}
+    mut result, err = run_expression(text, names, values)
+    return result, err
+}
+
+#[doc("Evaluates the passed text(text) like evaluate, with each name in the passed names(names) standing for the value at the same position in the passed values(values)")]
+fn evaluate_with(text string, names [string], values [f64]) -> (f64, Error) {
+    if len(names) != len(values) {
+        return MIN_EXPRESSION_VALUE, error(.EXPRESSION_VARIABLE_MISMATCH, "${len(names)} names were passed with ${len(values)} values")
+    }
+    for index in range(0, len(names)) {
+        mut err = validate_expression_name(names[index])
+        if err != nil {
+            return MIN_EXPRESSION_VALUE, err
+        }
+        if math.is_nan(values[index]) || math.is_infinite(values[index]) {
+            return MIN_EXPRESSION_VALUE, error(.EXPRESSION_INVALID_VARIABLE, "The value for '${names[index]}' is not a finite number")
+        }
+    }
+    mut result, err = run_expression(text, names, values)
+    return result, err
+}
