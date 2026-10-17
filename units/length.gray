@@ -4,6 +4,12 @@
 * GitHub: @SchoolyB
 */
 
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_LENGTH_VALUE f64 = 0.0
+private const MAX_LENGTH_VALUE f64 = 1.0e300
+
 /*********************************
 LENGTH CONSTANTS
 *********************************/
@@ -27,92 +33,267 @@ const YARDS_PER_METER f64 = 1.09361
 const MILES_PER_KM f64 = 0.621371
 const FEET_PER_KM f64 = 3280.84
 
+#error_code
+private const LengthErrorCodes enum {
+    LENGTH_VAL_NEGATIVE
+    LENGTH_VAL_NOT_A_NUMBER
+    LENGTH_VAL_INFINITE
+    LENGTH_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid length
+private fn validate_length(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.LENGTH_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.LENGTH_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_LENGTH_VALUE {
+        return error(.LENGTH_VAL_NEGATIVE, "Value ${val} is negative, min is ${MIN_LENGTH_VALUE}")
+    }
+    if val > MAX_LENGTH_VALUE {
+        return error(.LENGTH_VAL_TOO_LARGE, "Value ${val} too large, max is ${MAX_LENGTH_VALUE}")
+    }
+    return nil
+}
+
 /*********************************
 METRIC TO METRIC CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed centimeters(val) to meters")]
-fn centimeter_to_meter(val f64) -> f64 {return val / CM_PER_METER}
+fn centimeter_to_meter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val / CM_PER_METER, nil
+}
 
 #[doc("Converts the passed meters(val) to centimeters")]
-fn meter_to_centimeter(val f64) -> f64 {return val * CM_PER_METER}
+fn meter_to_centimeter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * CM_PER_METER, nil
+}
 
 #[doc("Converts the passed meters(val) to kilometers")]
-fn meter_to_kilometer(val f64) -> f64 {return val / METERS_PER_KM}
+fn meter_to_kilometer(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val / METERS_PER_KM, nil
+}
 
 #[doc("Converts the passed kilometers(val) to meters")]
-fn kilometer_to_meter(val f64) -> f64 {return val * METERS_PER_KM}
+fn kilometer_to_meter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * METERS_PER_KM, nil
+}
 
 
 /*********************************
 IMPERIAL TO IMPERIAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed inches(val) to feet")]
-fn inch_to_feet(val f64) -> f64 {return val / INCHES_PER_FOOT}
+fn inch_to_feet(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val / INCHES_PER_FOOT, nil
+}
 
 #[doc("Converts the passed feet(val) to inches")]
-fn foot_to_inch(val f64) -> f64 {return val * INCHES_PER_FOOT}
+fn foot_to_inch(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * INCHES_PER_FOOT, nil
+}
 
 #[doc("Converts the passed feet(val) to yards")]
-fn feet_to_yard(val f64) -> f64 {return val / FEET_PER_YARD}
+fn feet_to_yard(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val / FEET_PER_YARD, nil
+}
 
 #[doc("Converts the passed yards(val) to feet")]
-fn yard_to_feet(val f64) -> f64 {return val * FEET_PER_YARD}
+fn yard_to_feet(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * FEET_PER_YARD, nil
+}
 
 #[doc("Converts the passed yards(val) to miles")]
-fn yard_to_mile(val f64) -> f64 {return val / YARDS_PER_MILE}
+fn yard_to_mile(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val / YARDS_PER_MILE, nil
+}
 
 #[doc("Converts the passed miles(val) to yards")]
-fn mile_to_yard(val f64) -> f64 {return val * YARDS_PER_MILE}
+fn mile_to_yard(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * YARDS_PER_MILE, nil
+}
 
 #[doc("Converts the passed feet(val) to miles")]
-fn feet_to_mile(val f64) -> f64 {return val / FEET_PER_MILE}
+fn feet_to_mile(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val / FEET_PER_MILE, nil
+}
 
 #[doc("Converts the passed miles(val) to feet")]
-fn mile_to_feet(val f64) -> f64 {return val * FEET_PER_MILE}
+fn mile_to_feet(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * FEET_PER_MILE, nil
+}
 
 
 /*********************************
 IMPERIAL TO METRIC CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed inches(val) to centimeters")]
-fn inch_to_centimeter(val f64) -> f64 {return val * CM_PER_INCH}
+fn inch_to_centimeter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * CM_PER_INCH, nil
+}
 
 #[doc("Converts the passed inches(val) to meters")]
-fn inch_to_meter(val f64) -> f64 {return val * METERS_PER_INCH}
+fn inch_to_meter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * METERS_PER_INCH, nil
+}
 
 #[doc("Converts the passed feet(val) to meters")]
-fn feet_to_meter(val f64) -> f64 {return val * METERS_PER_FOOT}
+fn feet_to_meter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * METERS_PER_FOOT, nil
+}
 
 #[doc("Converts the passed feet(val) to centimeters")]
-fn feet_to_centimeter(val f64) -> f64 {return val * CM_PER_FOOT}
+fn feet_to_centimeter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * CM_PER_FOOT, nil
+}
 
 #[doc("Converts the passed yards(val) to meters")]
-fn yard_to_meter(val f64) -> f64 {return val * METERS_PER_YARD}
+fn yard_to_meter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * METERS_PER_YARD, nil
+}
 
 #[doc("Converts the passed miles(val) to kilometers")]
-fn mile_to_kilometer(val f64) -> f64 {return val * KM_PER_MILE}
+fn mile_to_kilometer(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * KM_PER_MILE, nil
+}
 
 #[doc("Converts the passed miles(val) to meters")]
-fn mile_to_meter(val f64) -> f64 {return val * METERS_PER_MILE}
+fn mile_to_meter(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * METERS_PER_MILE, nil
+}
 
 
 /*********************************
 METRIC TO IMPERIAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed centimeters(val) to inches")]
-fn centimeter_to_inch(val f64) -> f64 {return val * INCHES_PER_CM}
+fn centimeter_to_inch(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * INCHES_PER_CM, nil
+}
 
 #[doc("Converts the passed meters(val) to inches")]
-fn meter_to_inch(val f64) -> f64 {return val * INCHES_PER_METER}
+fn meter_to_inch(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * INCHES_PER_METER, nil
+}
 
 #[doc("Converts the passed meters(val) to feet")]
-fn meter_to_feet(val f64) -> f64 {return val * FEET_PER_METER}
+fn meter_to_feet(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * FEET_PER_METER, nil
+}
 
 #[doc("Converts the passed meters(val) to yards")]
-fn meter_to_yard(val f64) -> f64 {return val * YARDS_PER_METER}
+fn meter_to_yard(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * YARDS_PER_METER, nil
+}
 
 #[doc("Converts the passed kilometers(val) to miles")]
-fn kilometer_to_mile(val f64) -> f64 {return val * MILES_PER_KM}
+fn kilometer_to_mile(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * MILES_PER_KM, nil
+}
 
 #[doc("Converts the passed kilometers(val) to feet")]
-fn kilometer_to_feet(val f64) -> f64 {return val * FEET_PER_KM}
+fn kilometer_to_feet(val f64) -> (f64, Error) {
+    mut err = validate_length(val)
+    if err != nil {
+        return MIN_LENGTH_VALUE, err
+    }
+    return val * FEET_PER_KM, nil
+}

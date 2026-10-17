@@ -4,6 +4,14 @@
 * GitHub: @SchoolyB
 */
 
+import @math
+
+//INTERNAL CONSTANTS
+private const ABSOLUTE_ZERO_CELSIUS f64 = -273.15
+private const ABSOLUTE_ZERO_FAHRENHEIT f64 = -459.67
+private const ABSOLUTE_ZERO_KELVIN f64 = 0.0
+private const MAX_TEMPERATURE_VALUE f64 = 1.0e300
+
 /*********************************
 TEMPERATURE CONSTANTS
 *********************************/
@@ -12,31 +20,92 @@ const FAHRENHEIT_TO_CELSIUS_MULTIPLIER f64 = 0.555556
 const FAHRENHEIT_OFFSET f64 = 32.0
 const KELVIN_OFFSET f64 = 273.15
 
+#error_code
+private const TemperatureErrorCodes enum {
+    TEMPERATURE_VAL_BELOW_ABSOLUTE_ZERO
+    TEMPERATURE_VAL_NOT_A_NUMBER
+    TEMPERATURE_VAL_INFINITE
+    TEMPERATURE_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid temperature on a scale whose absolute zero is minimum
+private fn validate_temperature(val f64, minimum f64) -> Error {
+    if math.is_nan(val) {
+        return error(.TEMPERATURE_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.TEMPERATURE_VAL_INFINITE, "Value is infinite")
+    }
+    if val < minimum {
+        return error(.TEMPERATURE_VAL_BELOW_ABSOLUTE_ZERO, "Value ${val} is below absolute zero, min is ${minimum}")
+    }
+    if val > MAX_TEMPERATURE_VALUE {
+        return error(.TEMPERATURE_VAL_TOO_LARGE, "Value ${val} too large, max is ${MAX_TEMPERATURE_VALUE}")
+    }
+    return nil
+}
+
 /*********************************
 CELSIUS CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed degrees Celsius(val) to degrees Fahrenheit")]
-fn convert_celsius_to_fahrenheit(val f64) -> f64 {return val * CELSIUS_TO_FAHRENHEIT_MULTIPLIER + FAHRENHEIT_OFFSET}
+fn convert_celsius_to_fahrenheit(val f64) -> (f64, Error) {
+    mut err = validate_temperature(val, ABSOLUTE_ZERO_CELSIUS)
+    if err != nil {
+        return ABSOLUTE_ZERO_KELVIN, err
+    }
+    return val * CELSIUS_TO_FAHRENHEIT_MULTIPLIER + FAHRENHEIT_OFFSET, nil
+}
 
 #[doc("Converts the passed degrees Celsius(val) to kelvin")]
-fn convert_celsius_to_kelvin(val f64) -> f64 {return val + KELVIN_OFFSET}
+fn convert_celsius_to_kelvin(val f64) -> (f64, Error) {
+    mut err = validate_temperature(val, ABSOLUTE_ZERO_CELSIUS)
+    if err != nil {
+        return ABSOLUTE_ZERO_KELVIN, err
+    }
+    return val + KELVIN_OFFSET, nil
+}
 
 
 /*********************************
 FAHRENHEIT CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed degrees Fahrenheit(val) to degrees Celsius")]
-fn convert_fahrenheit_to_celsius(val f64) -> f64 {return (val - FAHRENHEIT_OFFSET) * FAHRENHEIT_TO_CELSIUS_MULTIPLIER}
+fn convert_fahrenheit_to_celsius(val f64) -> (f64, Error) {
+    mut err = validate_temperature(val, ABSOLUTE_ZERO_FAHRENHEIT)
+    if err != nil {
+        return ABSOLUTE_ZERO_KELVIN, err
+    }
+    return (val - FAHRENHEIT_OFFSET) * FAHRENHEIT_TO_CELSIUS_MULTIPLIER, nil
+}
 
 #[doc("Converts the passed degrees Fahrenheit(val) to kelvin")]
-fn convert_fahrenheit_to_kelvin(val f64) -> f64 {return (val - FAHRENHEIT_OFFSET) * FAHRENHEIT_TO_CELSIUS_MULTIPLIER + KELVIN_OFFSET}
+fn convert_fahrenheit_to_kelvin(val f64) -> (f64, Error) {
+    mut err = validate_temperature(val, ABSOLUTE_ZERO_FAHRENHEIT)
+    if err != nil {
+        return ABSOLUTE_ZERO_KELVIN, err
+    }
+    return (val - FAHRENHEIT_OFFSET) * FAHRENHEIT_TO_CELSIUS_MULTIPLIER + KELVIN_OFFSET, nil
+}
 
 
 /*********************************
 KELVIN CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed kelvin(val) to degrees Celsius")]
-fn convert_kelvin_to_celsius(val f64) -> f64 {return val - KELVIN_OFFSET}
+fn convert_kelvin_to_celsius(val f64) -> (f64, Error) {
+    mut err = validate_temperature(val, ABSOLUTE_ZERO_KELVIN)
+    if err != nil {
+        return ABSOLUTE_ZERO_KELVIN, err
+    }
+    return val - KELVIN_OFFSET, nil
+}
 
 #[doc("Converts the passed kelvin(val) to degrees Fahrenheit")]
-fn convert_kelvin_to_fahrenheit(val f64) -> f64 {return (val - KELVIN_OFFSET) * CELSIUS_TO_FAHRENHEIT_MULTIPLIER + FAHRENHEIT_OFFSET}
+fn convert_kelvin_to_fahrenheit(val f64) -> (f64, Error) {
+    mut err = validate_temperature(val, ABSOLUTE_ZERO_KELVIN)
+    if err != nil {
+        return ABSOLUTE_ZERO_KELVIN, err
+    }
+    return (val - KELVIN_OFFSET) * CELSIUS_TO_FAHRENHEIT_MULTIPLIER + FAHRENHEIT_OFFSET, nil
+}

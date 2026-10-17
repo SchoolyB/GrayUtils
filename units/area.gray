@@ -6,6 +6,10 @@
 
 import @math
 
+//INTERNAL CONSTANTS
+private const MIN_AREA_VALUE f64 = 0.0
+private const MAX_AREA_VALUE f64 = 1.0e150
+
 /*********************************
 AREA CONSTANTS
 *********************************/
@@ -28,122 +32,379 @@ const ACRES_PER_SQ_METER f64 = 0.000247105
 const SQ_MILES_PER_SQ_KM f64 = 0.386102
 const ACRES_PER_HECTARE f64 = 2.47105
 
+#error_code
+private const AreaErrorCodes enum {
+    AREA_VAL_NEGATIVE
+    AREA_VAL_NOT_A_NUMBER
+    AREA_VAL_INFINITE
+    AREA_VAL_TOO_LARGE
+}
+
+// Returns an error when val (the parameter called name) is not a valid dimension or area
+private fn validate_area(val f64, name string) -> Error {
+    if math.is_nan(val) {
+        return error(.AREA_VAL_NOT_A_NUMBER, "${name} is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.AREA_VAL_INFINITE, "${name} is infinite")
+    }
+    if val < MIN_AREA_VALUE {
+        return error(.AREA_VAL_NEGATIVE, "${name} ${val} is negative, min is ${MIN_AREA_VALUE}")
+    }
+    if val > MAX_AREA_VALUE {
+        return error(.AREA_VAL_TOO_LARGE, "${name} ${val} too large, max is ${MAX_AREA_VALUE}")
+    }
+    return nil
+}
+
 /*********************************
 SHAPE AREA CALCULATION FUNCTIONS
 *********************************/
 #[doc("Calculates the area of a rectangle with the passed in length(l) and width(w)")]
-fn calculate_rectangle_area(l, w f64) -> f64 {return l * w}
+fn calculate_rectangle_area(l, w f64) -> (f64, Error) {
+    mut errL = validate_area(l, "l")
+    if errL != nil {
+        return MIN_AREA_VALUE, errL
+    }
+    mut errW = validate_area(w, "w")
+    if errW != nil {
+        return MIN_AREA_VALUE, errW
+    }
+    return l * w, nil
+}
 
 #[doc("Calculates the area of a square with the passed in side's(s) length")]
-fn calculate_square_area(s f64) -> f64 {return s * s}
+fn calculate_square_area(s f64) -> (f64, Error) {
+    mut errS = validate_area(s, "s")
+    if errS != nil {
+        return MIN_AREA_VALUE, errS
+    }
+    return s * s, nil
+}
 
 #[doc("Calculates the area of a triangle with the passed base(b) and height(h)")]
-fn calculate_triangle_area(b, h f64) -> f64 {return b * h / 2}
+fn calculate_triangle_area(b, h f64) -> (f64, Error) {
+    mut errB = validate_area(b, "b")
+    if errB != nil {
+        return MIN_AREA_VALUE, errB
+    }
+    mut errH = validate_area(h, "h")
+    if errH != nil {
+        return MIN_AREA_VALUE, errH
+    }
+    return b * h / 2, nil
+}
 
 #[doc("Calculates the area of a circle with the passed radius(r)")]
-fn calculate_circle_area(r f64) -> f64 {return math.PI * r * r}
+fn calculate_circle_area(r f64) -> (f64, Error) {
+    mut errR = validate_area(r, "r")
+    if errR != nil {
+        return MIN_AREA_VALUE, errR
+    }
+    return math.PI * r * r, nil
+}
 
 #[doc("Calculates the area of a parallelogram with the passed base(b) and height(h)")]
-fn calculate_parallelogram_area(b, h f64) -> f64 {return b * h}
+fn calculate_parallelogram_area(b, h f64) -> (f64, Error) {
+    mut errB = validate_area(b, "b")
+    if errB != nil {
+        return MIN_AREA_VALUE, errB
+    }
+    mut errH = validate_area(h, "h")
+    if errH != nil {
+        return MIN_AREA_VALUE, errH
+    }
+    return b * h, nil
+}
 
 #[doc("Calculates the area of a trapezoid with the passed base1(b1), base2(b2) and heigh(h)")]
-fn calculate_trapezoid_area(b1, b2, h f64) -> f64 {return (b1 + b2) / 2 * h}
+fn calculate_trapezoid_area(b1, b2, h f64) -> (f64, Error) {
+    mut errB1 = validate_area(b1, "b1")
+    if errB1 != nil {
+        return MIN_AREA_VALUE, errB1
+    }
+    mut errB2 = validate_area(b2, "b2")
+    if errB2 != nil {
+        return MIN_AREA_VALUE, errB2
+    }
+    mut errH = validate_area(h, "h")
+    if errH != nil {
+        return MIN_AREA_VALUE, errH
+    }
+    return (b1 + b2) / 2 * h, nil
+}
 
 #[doc("Calculates the area of an ellipse with the passed radiouses(r1, r2)")]
-fn calculate_ellipse_area(r1, r2 f64) -> f64 {return math.PI * r1 * r2}
+fn calculate_ellipse_area(r1, r2 f64) -> (f64, Error) {
+    mut errR1 = validate_area(r1, "r1")
+    if errR1 != nil {
+        return MIN_AREA_VALUE, errR1
+    }
+    mut errR2 = validate_area(r2, "r2")
+    if errR2 != nil {
+        return MIN_AREA_VALUE, errR2
+    }
+    return math.PI * r1 * r2, nil
+}
 
 #[doc("Calculates the area of a rhombus with the passed diagonals(d1, d2)")]
-fn calculate_rhombus_area(d1, d2 f64) -> f64 {return d1 * d2 / 2}
+fn calculate_rhombus_area(d1, d2 f64) -> (f64, Error) {
+    mut errD1 = validate_area(d1, "d1")
+    if errD1 != nil {
+        return MIN_AREA_VALUE, errD1
+    }
+    mut errD2 = validate_area(d2, "d2")
+    if errD2 != nil {
+        return MIN_AREA_VALUE, errD2
+    }
+    return d1 * d2 / 2, nil
+}
 
 /*********************************
 METRIC TO METRIC CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed value(val) as square centimeters to square meters")]
-fn sq_centimeter_to_sq_meter(val f64) -> f64 {return val / SQ_CM_PER_SQ_METER}
+fn sq_centimeter_to_sq_meter(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val / SQ_CM_PER_SQ_METER, nil
+}
 
 #[doc("Converts the passed value(val) as square meters to square centimeters")]
-fn sq_meter_to_sq_centimeter(val f64) -> f64 {return val * SQ_CM_PER_SQ_METER}
+fn sq_meter_to_sq_centimeter(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_CM_PER_SQ_METER, nil
+}
 
 #[doc("Converts the passed value(val) as square meters to square kilometers")]
-fn sq_meter_to_sq_kilometer(val f64) -> f64 {return val / SQ_METERS_PER_SQ_KM}
+fn sq_meter_to_sq_kilometer(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val / SQ_METERS_PER_SQ_KM, nil
+}
 
 #[doc("Converts the passed value(val) as square kilometers to square meters")]
-fn sq_kilometer_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_SQ_KM}
+fn sq_kilometer_to_sq_meter(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_METERS_PER_SQ_KM, nil
+}
 
 #[doc("Converts the passed value(val) as square meters to hectares")]
-fn sq_meter_to_hectare(val f64) -> f64 {return val / SQ_METERS_PER_ACRE * HECTARES_PER_ACRE}
+fn sq_meter_to_hectare(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val / SQ_METERS_PER_ACRE * HECTARES_PER_ACRE, nil
+}
 
 #[doc("Converts the passed value(val) as hectares to square meters")]
-fn hectare_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_ACRE / HECTARES_PER_ACRE}
+fn hectare_to_sq_meter(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_METERS_PER_ACRE / HECTARES_PER_ACRE, nil
+}
 
 
 /*********************************
 IMPERIAL TO IMPERIAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed value(val) as square inches to square feet")]
-fn sq_inch_to_sq_foot(val f64) -> f64 {return val / SQ_INCHES_PER_SQ_FOOT}
+fn sq_inch_to_sq_foot(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val / SQ_INCHES_PER_SQ_FOOT, nil
+}
 
 #[doc("Converts the passed value(val) as square feet to square inches")]
-fn sq_foot_to_sq_inch(val f64) -> f64 {return val * SQ_INCHES_PER_SQ_FOOT}
+fn sq_foot_to_sq_inch(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_INCHES_PER_SQ_FOOT, nil
+}
 
 #[doc("Converts the passed value(val) as square feet to square yards")]
-fn sq_foot_to_sq_yard(val f64) -> f64 {return val / SQ_FEET_PER_SQ_YARD}
+fn sq_foot_to_sq_yard(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val / SQ_FEET_PER_SQ_YARD, nil
+}
 
 #[doc("Converts the passed value(val) as square yards to square feet")]
-fn sq_yard_to_sq_foot(val f64) -> f64 {return val * SQ_FEET_PER_SQ_YARD}
+fn sq_yard_to_sq_foot(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_FEET_PER_SQ_YARD, nil
+}
 
 #[doc("Converts the passed value(val) as square feet to acres")]
-fn sq_foot_to_acre(val f64) -> f64 {return val / SQ_FEET_PER_ACRE}
+fn sq_foot_to_acre(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val / SQ_FEET_PER_ACRE, nil
+}
 
 #[doc("Converts the passed value(val) as acres to square feet")]
-fn acre_to_sq_foot(val f64) -> f64 {return val * SQ_FEET_PER_ACRE}
+fn acre_to_sq_foot(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_FEET_PER_ACRE, nil
+}
 
 #[doc("Converts the passed value(val) as acres to square miles")]
-fn acre_to_sq_mile(val f64) -> f64 {return val / ACRES_PER_SQ_MILE}
+fn acre_to_sq_mile(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val / ACRES_PER_SQ_MILE, nil
+}
 
 #[doc("Converts the passed value(val) as square miles to acres")]
-fn sq_mile_to_acre(val f64) -> f64 {return val * ACRES_PER_SQ_MILE}
+fn sq_mile_to_acre(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * ACRES_PER_SQ_MILE, nil
+}
 
 
 /*********************************
 IMPERIAL TO METRIC CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed value(val) as square inches to square centimeters")]
-fn sq_inch_to_sq_centimeter(val f64) -> f64 {return val * SQ_CM_PER_SQ_INCH}
+fn sq_inch_to_sq_centimeter(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_CM_PER_SQ_INCH, nil
+}
 
 #[doc("Converts the passed value(val) as square feet to square meters")]
-fn sq_foot_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_SQ_FOOT}
+fn sq_foot_to_sq_meter(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_METERS_PER_SQ_FOOT, nil
+}
 
 #[doc("Converts the passed value(val) as square yards to square meters")]
-fn sq_yard_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_SQ_YARD}
+fn sq_yard_to_sq_meter(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_METERS_PER_SQ_YARD, nil
+}
 
 #[doc("Converts the passed value(val) as acres to square meters")]
-fn acre_to_sq_meter(val f64) -> f64 {return val * SQ_METERS_PER_ACRE}
+fn acre_to_sq_meter(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_METERS_PER_ACRE, nil
+}
 
 #[doc("Converts the passed value(val) as acres to hectares")]
-fn acre_to_hectare(val f64) -> f64 {return val * HECTARES_PER_ACRE}
+fn acre_to_hectare(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * HECTARES_PER_ACRE, nil
+}
 
 #[doc("Converts the passed value(val) as square miles to square kilometers")]
-fn sq_mile_to_sq_kilometer(val f64) -> f64 {return val * SQ_KM_PER_SQ_MILE}
+fn sq_mile_to_sq_kilometer(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_KM_PER_SQ_MILE, nil
+}
 
 
 /*********************************
 METRIC TO IMPERIAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed value(val) as square centimeters to square inches")]
-fn sq_centimeter_to_sq_inch(val f64) -> f64 {return val * SQ_INCHES_PER_SQ_CM}
+fn sq_centimeter_to_sq_inch(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_INCHES_PER_SQ_CM, nil
+}
 
 #[doc("Converts the passed value(val) as square meters to square feet")]
-fn sq_meter_to_sq_foot(val f64) -> f64 {return val * SQ_FEET_PER_SQ_METER}
+fn sq_meter_to_sq_foot(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_FEET_PER_SQ_METER, nil
+}
 
 #[doc("Converts the passed value(val) as square meters to square yards")]
-fn sq_meter_to_sq_yard(val f64) -> f64 {return val * SQ_YARDS_PER_SQ_METER}
+fn sq_meter_to_sq_yard(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_YARDS_PER_SQ_METER, nil
+}
 
 #[doc("Converts the passed value(val) as square meters to acres")]
-fn sq_meter_to_acre(val f64) -> f64 {return val * ACRES_PER_SQ_METER}
+fn sq_meter_to_acre(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * ACRES_PER_SQ_METER, nil
+}
 
 #[doc("Converts the passed value(val) as hectares to acres")]
-fn hectare_to_acre(val f64) -> f64 {return val * ACRES_PER_HECTARE}
+fn hectare_to_acre(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * ACRES_PER_HECTARE, nil
+}
 
 #[doc("Converts the passed value(val) as square kilometers to square miles")]
-fn sq_kilometer_to_sq_mile(val f64) -> f64 {return val * SQ_MILES_PER_SQ_KM}
+fn sq_kilometer_to_sq_mile(val f64) -> (f64, Error) {
+    mut errVAL = validate_area(val, "val")
+    if errVAL != nil {
+        return MIN_AREA_VALUE, errVAL
+    }
+    return val * SQ_MILES_PER_SQ_KM, nil
+}

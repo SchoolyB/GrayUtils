@@ -4,6 +4,12 @@
 * GitHub: @SchoolyB
 */
 
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_SPEED_VALUE f64 = 0.0
+private const MAX_SPEED_VALUE f64 = 1.0e300
+
 /*********************************
 SPEED CONSTANTS
 *********************************/
@@ -24,75 +30,208 @@ const KNOTS_PER_MPH f64 = 0.868976
 const MPS_PER_KNOT f64 = 0.514444
 const KNOTS_PER_MPS f64 = 1.94384
 
+#error_code
+private const SpeedErrorCodes enum {
+    SPEED_VAL_NEGATIVE
+    SPEED_VAL_NOT_A_NUMBER
+    SPEED_VAL_INFINITE
+    SPEED_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid speed
+private fn validate_speed(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.SPEED_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.SPEED_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_SPEED_VALUE {
+        return error(.SPEED_VAL_NEGATIVE, "Value ${val} is negative, min is ${MIN_SPEED_VALUE}")
+    }
+    if val > MAX_SPEED_VALUE {
+        return error(.SPEED_VAL_TOO_LARGE, "Value ${val} too large, max is ${MAX_SPEED_VALUE}")
+    }
+    return nil
+}
+
 /*********************************
 METRIC TO METRIC CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed meters per second(val) to kilometers per hour")]
-fn meters_per_second_to_kilometers_per_hour(val f64) -> f64 {return val * KMH_PER_MPS}
+fn meters_per_second_to_kilometers_per_hour(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * KMH_PER_MPS, nil
+}
 
 #[doc("Converts the passed kilometers per hour(val) to meters per second")]
-fn kilometers_per_hour_to_meters_per_second(val f64) -> f64 {return val * MPS_PER_KMH}
+fn kilometers_per_hour_to_meters_per_second(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPS_PER_KMH, nil
+}
 
 
 /*********************************
 IMPERIAL TO IMPERIAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed miles per hour(val) to feet per second")]
-fn miles_per_hour_to_feet_per_second(val f64) -> f64 {return val * FPS_PER_MPH}
+fn miles_per_hour_to_feet_per_second(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * FPS_PER_MPH, nil
+}
 
 #[doc("Converts the passed feet per second(val) to miles per hour")]
-fn feet_per_second_to_miles_per_hour(val f64) -> f64 {return val * MPH_PER_FPS}
+fn feet_per_second_to_miles_per_hour(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPH_PER_FPS, nil
+}
 
 
 /*********************************
 IMPERIAL TO METRIC CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed miles per hour(val) to kilometers per hour")]
-fn miles_per_hour_to_kilometers_per_hour(val f64) -> f64 {return val * KMH_PER_MPH}
+fn miles_per_hour_to_kilometers_per_hour(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * KMH_PER_MPH, nil
+}
 
 #[doc("Converts the passed miles per hour(val) to meters per second")]
-fn miles_per_hour_to_meters_per_second(val f64) -> f64 {return val * MPS_PER_MPH}
+fn miles_per_hour_to_meters_per_second(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPS_PER_MPH, nil
+}
 
 #[doc("Converts the passed feet per second(val) to meters per second")]
-fn feet_per_second_to_meters_per_second(val f64) -> f64 {return val * MPS_PER_FPS}
+fn feet_per_second_to_meters_per_second(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPS_PER_FPS, nil
+}
 
 #[doc("Converts the passed feet per second(val) to kilometers per hour")]
-fn feet_per_second_to_kilometers_per_hour(val f64) -> f64 {return val * MPS_PER_FPS * KMH_PER_MPS}
+fn feet_per_second_to_kilometers_per_hour(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPS_PER_FPS * KMH_PER_MPS, nil
+}
 
 
 /*********************************
 METRIC TO IMPERIAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed kilometers per hour(val) to miles per hour")]
-fn kilometers_per_hour_to_miles_per_hour(val f64) -> f64 {return val * MPH_PER_KMH}
+fn kilometers_per_hour_to_miles_per_hour(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPH_PER_KMH, nil
+}
 
 #[doc("Converts the passed meters per second(val) to miles per hour")]
-fn meters_per_second_to_miles_per_hour(val f64) -> f64 {return val * MPH_PER_MPS}
+fn meters_per_second_to_miles_per_hour(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPH_PER_MPS, nil
+}
 
 #[doc("Converts the passed meters per second(val) to feet per second")]
-fn meters_per_second_to_feet_per_second(val f64) -> f64 {return val * FPS_PER_MPS}
+fn meters_per_second_to_feet_per_second(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * FPS_PER_MPS, nil
+}
 
 #[doc("Converts the passed kilometers per hour(val) to feet per second")]
-fn kilometers_per_hour_to_feet_per_second(val f64) -> f64 {return val * MPS_PER_KMH * FPS_PER_MPS}
+fn kilometers_per_hour_to_feet_per_second(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPS_PER_KMH * FPS_PER_MPS, nil
+}
 
 
 /*********************************
 KNOT CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed knots(val) to kilometers per hour")]
-fn knot_to_kilometers_per_hour(val f64) -> f64 {return val * KMH_PER_KNOT}
+fn knot_to_kilometers_per_hour(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * KMH_PER_KNOT, nil
+}
 
 #[doc("Converts the passed kilometers per hour(val) to knots")]
-fn kilometers_per_hour_to_knot(val f64) -> f64 {return val * KNOTS_PER_KMH}
+fn kilometers_per_hour_to_knot(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * KNOTS_PER_KMH, nil
+}
 
 #[doc("Converts the passed knots(val) to miles per hour")]
-fn knot_to_miles_per_hour(val f64) -> f64 {return val * MPH_PER_KNOT}
+fn knot_to_miles_per_hour(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPH_PER_KNOT, nil
+}
 
 #[doc("Converts the passed miles per hour(val) to knots")]
-fn miles_per_hour_to_knot(val f64) -> f64 {return val * KNOTS_PER_MPH}
+fn miles_per_hour_to_knot(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * KNOTS_PER_MPH, nil
+}
 
 #[doc("Converts the passed knots(val) to meters per second")]
-fn knot_to_meters_per_second(val f64) -> f64 {return val * MPS_PER_KNOT}
+fn knot_to_meters_per_second(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * MPS_PER_KNOT, nil
+}
 
 #[doc("Converts the passed meters per second(val) to knots")]
-fn meters_per_second_to_knot(val f64) -> f64 {return val * KNOTS_PER_MPS}
+fn meters_per_second_to_knot(val f64) -> (f64, Error) {
+    mut err = validate_speed(val)
+    if err != nil {
+        return MIN_SPEED_VALUE, err
+    }
+    return val * KNOTS_PER_MPS, nil
+}

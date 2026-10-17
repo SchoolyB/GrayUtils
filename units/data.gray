@@ -46,8 +46,8 @@ private const DataErrorCodes enum {
     VAL_TOO_LARGE_FOR_BASE
 }
 
-// Returns an error when val, measured in a unit worth bytes_per_unit bytes, is not a valid data size
-private fn validate(val f64, bytes_per_unit f64) -> Error {
+// Returns an error when val, measured in a unit worth bytesPerUnit bytes, is not a valid data size
+private fn validate_data(val f64, bytesPerUnit f64) -> Error {
     if math.is_nan(val) {
         return error(.VAL_NOT_A_NUMBER, "Value is not a number")
     }
@@ -57,7 +57,7 @@ private fn validate(val f64, bytes_per_unit f64) -> Error {
     if val < MIN_DATA_VALUE {
         return error(.VAL_NEGATIVE, "Value ${val} is negative, min is ${MIN_DATA_VALUE}")
     }
-    if val * bytes_per_unit > MAX_DATA_BYTES {
+    if val * bytesPerUnit > MAX_DATA_BYTES {
         return error(.VAL_TOO_LARGE_FOR_BASE, "Value ${val} too large, max is ${MAX_DATA_BYTES} bytes")
     }
     return nil
@@ -69,90 +69,90 @@ DECIMAL (SI) CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed bytes(val) to kilobytes")]
 fn byte_to_kilobyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_BYTE)
+    mut err = validate_data(val, BYTES_PER_BYTE)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / BYTES_PER_KB, nil
 }
 
 #[doc("Converts the passed kilobytes(val) to bytes")]
 fn kilobyte_to_byte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_KB)
+    mut err = validate_data(val, BYTES_PER_KB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_KB, nil
 }
 
 #[doc("Converts the passed kilobytes(val) to megabytes")]
 fn kilobyte_to_megabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_KB)
+    mut err = validate_data(val, BYTES_PER_KB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / KB_PER_MB, nil
 }
 
 #[doc("Converts the passed megabytes(val) to kilobytes")]
 fn megabyte_to_kilobyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_MB)
+    mut err = validate_data(val, BYTES_PER_MB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * KB_PER_MB, nil
 }
 
 #[doc("Converts the passed megabytes(val) to gigabytes")]
 fn megabyte_to_gigabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_MB)
+    mut err = validate_data(val, BYTES_PER_MB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / MB_PER_GB, nil
 }
 
 #[doc("Converts the passed gigabytes(val) to megabytes")]
 fn gigabyte_to_megabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_GB)
+    mut err = validate_data(val, BYTES_PER_GB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * MB_PER_GB, nil
 }
 
 #[doc("Converts the passed gigabytes(val) to terabytes")]
 fn gigabyte_to_terabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_GB)
+    mut err = validate_data(val, BYTES_PER_GB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / GB_PER_TB, nil
 }
 
 #[doc("Converts the passed terabytes(val) to gigabytes")]
 fn terabyte_to_gigabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_TB)
+    mut err = validate_data(val, BYTES_PER_TB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * GB_PER_TB, nil
 }
 
 #[doc("Converts the passed terabytes(val) to petabytes")]
 fn terabyte_to_petabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_TB)
+    mut err = validate_data(val, BYTES_PER_TB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / TB_PER_PB, nil
 }
 
 #[doc("Converts the passed petabytes(val) to terabytes")]
 fn petabyte_to_terabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_PB)
+    mut err = validate_data(val, BYTES_PER_PB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * TB_PER_PB, nil
 }
@@ -164,90 +164,90 @@ BINARY (IEC) CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed bytes(val) to kibibytes")]
 fn byte_to_kibibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_BYTE)
+    mut err = validate_data(val, BYTES_PER_BYTE)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / BYTES_PER_KIB, nil
 }
 
 #[doc("Converts the passed kibibytes(val) to bytes")]
 fn kibibyte_to_byte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_KIB)
+    mut err = validate_data(val, BYTES_PER_KIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_KIB, nil
 }
 
 #[doc("Converts the passed kibibytes(val) to mebibytes")]
 fn kibibyte_to_mebibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_KIB)
+    mut err = validate_data(val, BYTES_PER_KIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / KIB_PER_MIB, nil
 }
 
 #[doc("Converts the passed mebibytes(val) to kibibytes")]
 fn mebibyte_to_kibibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_MIB)
+    mut err = validate_data(val, BYTES_PER_MIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * KIB_PER_MIB, nil
 }
 
 #[doc("Converts the passed mebibytes(val) to gibibytes")]
 fn mebibyte_to_gibibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_MIB)
+    mut err = validate_data(val, BYTES_PER_MIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / MIB_PER_GIB, nil
 }
 
 #[doc("Converts the passed gibibytes(val) to mebibytes")]
 fn gibibyte_to_mebibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_GIB)
+    mut err = validate_data(val, BYTES_PER_GIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * MIB_PER_GIB, nil
 }
 
 #[doc("Converts the passed gibibytes(val) to tebibytes")]
 fn gibibyte_to_tebibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_GIB)
+    mut err = validate_data(val, BYTES_PER_GIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / GIB_PER_TIB, nil
 }
 
 #[doc("Converts the passed tebibytes(val) to gibibytes")]
 fn tebibyte_to_gibibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_TIB)
+    mut err = validate_data(val, BYTES_PER_TIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * GIB_PER_TIB, nil
 }
 
 #[doc("Converts the passed tebibytes(val) to pebibytes")]
 fn tebibyte_to_pebibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_TIB)
+    mut err = validate_data(val, BYTES_PER_TIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val / TIB_PER_PIB, nil
 }
 
 #[doc("Converts the passed pebibytes(val) to tebibytes")]
 fn pebibyte_to_tebibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_PIB)
+    mut err = validate_data(val, BYTES_PER_PIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * TIB_PER_PIB, nil
 }
@@ -258,36 +258,36 @@ DECIMAL TO BINARY CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed kilobytes(val) to kibibytes")]
 fn kilobyte_to_kibibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_KB)
+    mut err = validate_data(val, BYTES_PER_KB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_KB / BYTES_PER_KIB, nil
 }
 
 #[doc("Converts the passed megabytes(val) to mebibytes")]
 fn megabyte_to_mebibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_MB)
+    mut err = validate_data(val, BYTES_PER_MB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * KB_PER_MB * BYTES_PER_KB / BYTES_PER_KIB / KIB_PER_MIB, nil
 }
 
 #[doc("Converts the passed gigabytes(val) to gibibytes")]
 fn gigabyte_to_gibibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_GB)
+    mut err = validate_data(val, BYTES_PER_GB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_GB / BYTES_PER_GIB, nil
 }
 
 #[doc("Converts the passed terabytes(val) to tebibytes")]
 fn terabyte_to_tebibyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_TB)
+    mut err = validate_data(val, BYTES_PER_TB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_TB / BYTES_PER_TIB, nil
 }
@@ -298,36 +298,36 @@ BINARY TO DECIMAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed kibibytes(val) to kilobytes")]
 fn kibibyte_to_kilobyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_KIB)
+    mut err = validate_data(val, BYTES_PER_KIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_KIB / BYTES_PER_KB, nil
 }
 
 #[doc("Converts the passed mebibytes(val) to megabytes")]
 fn mebibyte_to_megabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_MIB)
+    mut err = validate_data(val, BYTES_PER_MIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_MIB / BYTES_PER_MB, nil
 }
 
 #[doc("Converts the passed gibibytes(val) to gigabytes")]
 fn gibibyte_to_gigabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_GIB)
+    mut err = validate_data(val, BYTES_PER_GIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_GIB / BYTES_PER_GB, nil
 }
 
 #[doc("Converts the passed tebibytes(val) to terabytes")]
 fn tebibyte_to_terabyte(val f64) -> (f64, Error) {
-    mut err = validate(val, BYTES_PER_TIB)
+    mut err = validate_data(val, BYTES_PER_TIB)
     if err != nil {
-        return 0.0, err
+        return MIN_DATA_VALUE, err
     }
     return val * BYTES_PER_TIB / BYTES_PER_TB, nil
 }

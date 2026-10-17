@@ -4,6 +4,12 @@
 * GitHub: @SchoolyB
 */
 
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_VOLUME_VALUE f64 = 0.0
+private const MAX_VOLUME_VALUE f64 = 1.0e300
+
 /*********************************
 VOLUME CONSTANTS
 *********************************/
@@ -26,107 +32,312 @@ const PINTS_PER_LITER f64 = 2.11338
 const QUARTS_PER_LITER f64 = 1.05669
 const GALLONS_PER_LITER f64 = 0.264172
 
+#error_code
+private const VolumeErrorCodes enum {
+    VOLUME_VAL_NEGATIVE
+    VOLUME_VAL_NOT_A_NUMBER
+    VOLUME_VAL_INFINITE
+    VOLUME_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid volume
+private fn validate_volume(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.VOLUME_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.VOLUME_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_VOLUME_VALUE {
+        return error(.VOLUME_VAL_NEGATIVE, "Value ${val} is negative, min is ${MIN_VOLUME_VALUE}")
+    }
+    if val > MAX_VOLUME_VALUE {
+        return error(.VOLUME_VAL_TOO_LARGE, "Value ${val} too large, max is ${MAX_VOLUME_VALUE}")
+    }
+    return nil
+}
+
 /*********************************
 METRIC TO METRIC CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed milliliters(val) to liters")]
-fn convert_milliliter_to_liter(val f64) -> f64 {return val / ML_PER_LITER}
+fn convert_milliliter_to_liter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / ML_PER_LITER, nil
+}
 
 #[doc("Converts the passed liters(val) to milliliters")]
-fn convert_liter_to_milliliter(val f64) -> f64 {return val * ML_PER_LITER}
+fn convert_liter_to_milliliter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * ML_PER_LITER, nil
+}
 
 #[doc("Converts the passed liters(val) to cubic meters")]
-fn convert_liter_to_cubic_meter(val f64) -> f64 {return val / LITERS_PER_CUBIC_METER}
+fn convert_liter_to_cubic_meter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / LITERS_PER_CUBIC_METER, nil
+}
 
 #[doc("Converts the passed cubic meters(val) to liters")]
-fn convert_cubic_meter_to_liter(val f64) -> f64 {return val * LITERS_PER_CUBIC_METER}
+fn convert_cubic_meter_to_liter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * LITERS_PER_CUBIC_METER, nil
+}
 
 
 /*********************************
 IMPERIAL TO IMPERIAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed fluid ounces(val) to cups")]
-fn convert_fluid_ounce_to_cup(val f64) -> f64 {return val / FL_OZ_PER_CUP}
+fn convert_fluid_ounce_to_cup(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / FL_OZ_PER_CUP, nil
+}
 
 #[doc("Converts the passed cups(val) to fluid ounces")]
-fn convert_cup_to_fluid_ounce(val f64) -> f64 {return val * FL_OZ_PER_CUP}
+fn convert_cup_to_fluid_ounce(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * FL_OZ_PER_CUP, nil
+}
 
 #[doc("Converts the passed cups(val) to pints")]
-fn convert_cup_to_pint(val f64) -> f64 {return val / CUPS_PER_PINT}
+fn convert_cup_to_pint(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / CUPS_PER_PINT, nil
+}
 
 #[doc("Converts the passed pints(val) to cups")]
-fn convert_pint_to_cup(val f64) -> f64 {return val * CUPS_PER_PINT}
+fn convert_pint_to_cup(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * CUPS_PER_PINT, nil
+}
 
 #[doc("Converts the passed pints(val) to quarts")]
-fn convert_pint_to_quart(val f64) -> f64 {return val / PINTS_PER_QUART}
+fn convert_pint_to_quart(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / PINTS_PER_QUART, nil
+}
 
 #[doc("Converts the passed quarts(val) to pints")]
-fn convert_quart_to_pint(val f64) -> f64 {return val * PINTS_PER_QUART}
+fn convert_quart_to_pint(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * PINTS_PER_QUART, nil
+}
 
 #[doc("Converts the passed quarts(val) to gallons")]
-fn convert_quart_to_gallon(val f64) -> f64 {return val / QUARTS_PER_GALLON}
+fn convert_quart_to_gallon(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / QUARTS_PER_GALLON, nil
+}
 
 #[doc("Converts the passed gallons(val) to quarts")]
-fn convert_gallon_to_quart(val f64) -> f64 {return val * QUARTS_PER_GALLON}
+fn convert_gallon_to_quart(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * QUARTS_PER_GALLON, nil
+}
 
 #[doc("Converts the passed fluid ounces(val) to gallons")]
-fn convert_fluid_ounce_to_gallon(val f64) -> f64 {return val / FL_OZ_PER_GALLON}
+fn convert_fluid_ounce_to_gallon(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / FL_OZ_PER_GALLON, nil
+}
 
 #[doc("Converts the passed gallons(val) to fluid ounces")]
-fn convert_gallon_to_fluid_ounce(val f64) -> f64 {return val * FL_OZ_PER_GALLON}
+fn convert_gallon_to_fluid_ounce(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * FL_OZ_PER_GALLON, nil
+}
 
 
 /*********************************
 IMPERIAL TO METRIC CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed fluid ounces(val) to milliliters")]
-fn convert_fluid_ounce_to_milliliter(val f64) -> f64 {return val * ML_PER_FL_OZ}
+fn convert_fluid_ounce_to_milliliter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * ML_PER_FL_OZ, nil
+}
 
 #[doc("Converts the passed fluid ounces(val) to liters")]
-fn convert_fluid_ounce_to_liter(val f64) -> f64 {return val * ML_PER_FL_OZ / ML_PER_LITER}
+fn convert_fluid_ounce_to_liter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * ML_PER_FL_OZ / ML_PER_LITER, nil
+}
 
 #[doc("Converts the passed cups(val) to milliliters")]
-fn convert_cup_to_milliliter(val f64) -> f64 {return val * ML_PER_CUP}
+fn convert_cup_to_milliliter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * ML_PER_CUP, nil
+}
 
 #[doc("Converts the passed cups(val) to liters")]
-fn convert_cup_to_liter(val f64) -> f64 {return val * ML_PER_CUP / ML_PER_LITER}
+fn convert_cup_to_liter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * ML_PER_CUP / ML_PER_LITER, nil
+}
 
 #[doc("Converts the passed pints(val) to liters")]
-fn convert_pint_to_liter(val f64) -> f64 {return val * LITERS_PER_PINT}
+fn convert_pint_to_liter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * LITERS_PER_PINT, nil
+}
 
 #[doc("Converts the passed quarts(val) to liters")]
-fn convert_quart_to_liter(val f64) -> f64 {return val * LITERS_PER_QUART}
+fn convert_quart_to_liter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * LITERS_PER_QUART, nil
+}
 
 #[doc("Converts the passed gallons(val) to liters")]
-fn convert_gallon_to_liter(val f64) -> f64 {return val * LITERS_PER_GALLON}
+fn convert_gallon_to_liter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * LITERS_PER_GALLON, nil
+}
 
 #[doc("Converts the passed gallons(val) to milliliters")]
-fn convert_gallon_to_milliliter(val f64) -> f64 {return val * LITERS_PER_GALLON * ML_PER_LITER}
+fn convert_gallon_to_milliliter(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * LITERS_PER_GALLON * ML_PER_LITER, nil
+}
 
 
 /*********************************
 METRIC TO IMPERIAL CONVERSION FUNCTIONS
 *********************************/
 #[doc("Converts the passed milliliters(val) to fluid ounces")]
-fn convert_milliliter_to_fluid_ounce(val f64) -> f64 {return val * FL_OZ_PER_ML}
+fn convert_milliliter_to_fluid_ounce(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * FL_OZ_PER_ML, nil
+}
 
 #[doc("Converts the passed liters(val) to fluid ounces")]
-fn convert_liter_to_fluid_ounce(val f64) -> f64 {return val * FL_OZ_PER_LITER}
+fn convert_liter_to_fluid_ounce(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * FL_OZ_PER_LITER, nil
+}
 
 #[doc("Converts the passed milliliters(val) to cups")]
-fn convert_milliliter_to_cup(val f64) -> f64 {return val / ML_PER_CUP}
+fn convert_milliliter_to_cup(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / ML_PER_CUP, nil
+}
 
 #[doc("Converts the passed liters(val) to cups")]
-fn convert_liter_to_cup(val f64) -> f64 {return val * CUPS_PER_LITER}
+fn convert_liter_to_cup(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * CUPS_PER_LITER, nil
+}
 
 #[doc("Converts the passed liters(val) to pints")]
-fn convert_liter_to_pint(val f64) -> f64 {return val * PINTS_PER_LITER}
+fn convert_liter_to_pint(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * PINTS_PER_LITER, nil
+}
 
 #[doc("Converts the passed liters(val) to quarts")]
-fn convert_liter_to_quart(val f64) -> f64 {return val * QUARTS_PER_LITER}
+fn convert_liter_to_quart(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * QUARTS_PER_LITER, nil
+}
 
 #[doc("Converts the passed liters(val) to gallons")]
-fn convert_liter_to_gallon(val f64) -> f64 {return val * GALLONS_PER_LITER}
+fn convert_liter_to_gallon(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val * GALLONS_PER_LITER, nil
+}
 
 #[doc("Converts the passed milliliters(val) to gallons")]
-fn convert_milliliter_to_gallon(val f64) -> f64 {return val / ML_PER_LITER * GALLONS_PER_LITER}
+fn convert_milliliter_to_gallon(val f64) -> (f64, Error) {
+    mut err = validate_volume(val)
+    if err != nil {
+        return MIN_VOLUME_VALUE, err
+    }
+    return val / ML_PER_LITER * GALLONS_PER_LITER, nil
+}
