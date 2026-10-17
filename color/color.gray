@@ -24,6 +24,12 @@ private mut HexidecimalMap map[u8:char] = {
 	15:'F'
 }
 
+#error_code
+private const ColorErrorCodes enum {
+    COLOR_HEX_INVALID_LENGTH
+    COLOR_HEX_INVALID_CHARACTER
+}
+
 #doc("Converts the passed in byte(b)passed as type u8...to two hexidecimal values as type char")
 fn byte_to_hex(b u8) -> (char, char) {
 	mut high = b/16
@@ -32,23 +38,43 @@ fn byte_to_hex(b u8) -> (char, char) {
 	return HexidecimalMap[high], HexidecimalMap[low]
 }
 
-#doc("Takes 2 hexidecimal values as type char(high, low) and returns the byte equivalent as type u8")
-fn hex_to_byte(high, low char) -> u8 {
+#doc("Takes 2 hexidecimal values as type char(high, low) and returns the byte equivalent as type u8. Returns an error if either value is not a hexidecimal digit")
+fn hex_to_byte(high, low char) -> (u8, Error) {
     keys = maps.get_keys(HexidecimalMap)
 
     mut highBytes u8 = 0
     mut lowBytes u8 = 0
+    mut highFound bool = false
+    mut lowFound bool = false
+
+    mut highUpper char = high
+    mut lowUpper char = low
+    if high >= 'a' && high <= 'f' {
+        highUpper = high - 32
+    }
+    if low >= 'a' && low <= 'f' {
+        lowUpper = low - 32
+    }
 
     for_each k in keys {
-        if HexidecimalMap[k] == high {
+        if HexidecimalMap[k] == highUpper {
             highBytes = k
+            highFound = true
         }
-        if HexidecimalMap[k] == low {
+        if HexidecimalMap[k] == lowUpper {
             lowBytes = k
+            lowFound = true
         }
     }
 
-    return highBytes * 16 + lowBytes
+    if !highFound {
+        return 0, error(.COLOR_HEX_INVALID_CHARACTER, "'${high}' is not a hexidecimal digit")
+    }
+    if !lowFound {
+        return 0, error(.COLOR_HEX_INVALID_CHARACTER, "'${low}' is not a hexidecimal digit")
+    }
+
+    return highBytes * 16 + lowBytes, nil
 }
 
 #doc("Converts 3 passed in u8 values(r,g,b) and returns the hexidecimal equivalant as a string")
@@ -60,11 +86,24 @@ fn rgb_to_hex(r,g,b u8) -> string {
     return "${rHigh}${rLow}${gHigh}${gLow}${bHigh}${bLow}"
 }
 
-#doc("Takes the passed full hexideciaml value(hex) returns 3 byte representations(r,g,b)")
-fn hex_to_rgb(hex string) -> (u8,u8,u8){
-     mut r = hex_to_byte(hex[0], hex[1])
-     mut g = hex_to_byte(hex[2], hex[3])
-     mut b = hex_to_byte(hex[4], hex[5])
+#doc("Takes the passed full hexideciaml value(hex) returns 3 byte representations(r,g,b). Returns an error if hex is not exactly 6 hexidecimal digits")
+fn hex_to_rgb(hex string) -> (u8, u8, u8, Error) {
+    if len(hex) != 6 {
+        return 0, 0, 0, error(.COLOR_HEX_INVALID_LENGTH, "'${hex}' must be 6 characters long")
+    }
 
-     return r, g, b
- }
+    mut r, rErr = hex_to_byte(hex[0], hex[1])
+    if rErr != nil {
+        return 0, 0, 0, rErr
+    }
+    mut g, gErr = hex_to_byte(hex[2], hex[3])
+    if gErr != nil {
+        return 0, 0, 0, gErr
+    }
+    mut b, bErr = hex_to_byte(hex[4], hex[5])
+    if bErr != nil {
+        return 0, 0, 0, bErr
+    }
+
+    return r, g, b, nil
+}
