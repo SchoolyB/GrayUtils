@@ -1,0 +1,458 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @arrays
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_MATRIX_VALUE f64 = -1.0e100
+private const MAX_MATRIX_VALUE f64 = 1.0e100
+private const MAX_MATRIX_SIZE i64 = 100
+private const MATRIX_EPSILON f64 = 1.0e-12
+
+#error_code
+private const MatrixErrorCodes enum {
+    MATRIX_INVALID_SIZE
+    MATRIX_DATA_LENGTH_MISMATCH
+    MATRIX_INDEX_OUT_OF_RANGE
+    MATRIX_DIMENSION_MISMATCH
+    MATRIX_NOT_SQUARE
+    MATRIX_SINGULAR
+    MATRIX_VAL_NOT_A_NUMBER
+    MATRIX_VAL_INFINITE
+    MATRIX_VAL_TOO_LARGE
+    MATRIX_RESULT_OUT_OF_RANGE
+}
+
+// Returns an error when val is NaN, infinite or too large
+private fn validate_matrix_value(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.MATRIX_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.MATRIX_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_MATRIX_VALUE || val > MAX_MATRIX_VALUE {
+        return error(.MATRIX_VAL_TOO_LARGE, "Value ${val} out of range, max magnitude is ${MAX_MATRIX_VALUE}")
+    }
+    return nil
+}
+
+// Returns an error when rows or columns is not from 1 to the max matrix size
+private fn validate_matrix_size(rows i64, columns i64) -> Error {
+    if rows < 1 || columns < 1 || rows > MAX_MATRIX_SIZE || columns > MAX_MATRIX_SIZE {
+        return error(.MATRIX_INVALID_SIZE, "Matrix size ${rows}x${columns} is invalid, each side must be from 1 to ${MAX_MATRIX_SIZE}")
+    }
+    return nil
+}
+
+// Returns an error when any value in data is invalid
+private fn validate_matrix_values(data [f64]) -> Error {
+    for_each val in data {
+        mut err = validate_matrix_value(val)
+        if err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+// Returns an error when matrix has an invalid size, data of the wrong length or an invalid value
+private fn validate_matrix(matrix Matrix) -> Error {
+    mut err = validate_matrix_size(matrix.rows, matrix.columns)
+    if err != nil {
+        return err
+    }
+    if len(matrix.data) != matrix.rows * matrix.columns {
+        return error(.MATRIX_DATA_LENGTH_MISMATCH, "Matrix is ${matrix.rows}x${matrix.columns} but holds ${len(matrix.data)} values")
+    }
+    return validate_matrix_values(matrix.data)
+}
+
+// Returns an error when data holds a value that overflowed or is not a number
+private fn validate_matrix_result(data [f64]) -> Error {
+    for_each val in data {
+        if !math.is_finite(val) {
+            return error(.MATRIX_RESULT_OUT_OF_RANGE, "Result is out of range")
+        }
+    }
+    return nil
+}
+
+// Returns a matrix with no rows or columns, returned alongside an error
+private fn empty_matrix() -> Matrix {
+    return Matrix{rows: 0, columns: 0, data: {}}
+}
+
+// Returns an array of count zeros
+private fn zeros(count i64) -> [f64] {
+    mut data [f64] = {}
+    for index in range(0, count) {
+        arrays.append(data, 0.0)
+    }
+    return data
+}
+
+#doc("A matrix of f64 values stored in row-major order")
+const Matrix struct {
+    rows, columns i64
+    data [f64]
+
+    #doc("Creates a matrix of zeros with the passed rows(rows) and columns(columns). Each must be from 1 to 100")
+    fn create(rows i64, columns i64) -> (Matrix, Error) {
+        mut err = validate_matrix_size(rows, columns)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        return Matrix{rows: rows, columns: columns, data: zeros(rows * columns)}, nil
+    }
+
+    #doc("Creates an identity matrix with the passed size(size) as both its rows and columns")
+    fn identity(size i64) -> (Matrix, Error) {
+        mut err = validate_matrix_size(size, size)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        mut data [f64] = zeros(size * size)
+        for index in range(0, size) {
+            data[index * size + index] = 1.0
+        }
+        return Matrix{rows: size, columns: size, data: data}, nil
+    }
+
+    #doc("Creates a matrix with the passed rows(rows) and columns(columns) from the passed values(values), given row by row")
+    fn from_array(rows i64, columns i64, values [f64]) -> (Matrix, Error) {
+        mut err = validate_matrix_size(rows, columns)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        if len(values) != rows * columns {
+            return empty_matrix(), error(.MATRIX_DATA_LENGTH_MISMATCH, "Matrix is ${rows}x${columns} but ${len(values)} values were passed")
+        }
+        err = validate_matrix_values(values)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        return Matrix{rows: rows, columns: columns, data: values}, nil
+    }
+
+    #doc("Gets the value at the passed row(row) and column(column) of the passed matrix(matrix). Indexes start at 0")
+    fn get(matrix Matrix, row i64, column i64) -> (f64, Error) {
+        mut err = validate_matrix(matrix)
+        if err != nil {
+            return MIN_MATRIX_VALUE, err
+        }
+        if row < 0 || row >= matrix.rows || column < 0 || column >= matrix.columns {
+            return MIN_MATRIX_VALUE, error(.MATRIX_INDEX_OUT_OF_RANGE, "Index ${row},${column} is outside a ${matrix.rows}x${matrix.columns} matrix")
+        }
+        return matrix.data[row * matrix.columns + column], nil
+    }
+
+    #doc("Sets the value at the passed row(row) and column(column) of the passed matrix(matrix) to the passed value(value). Indexes start at 0")
+    fn set(&matrix Matrix, row i64, column i64, value f64) -> Error {
+        mut err = validate_matrix(matrix)
+        if err != nil {
+            return err
+        }
+        if row < 0 || row >= matrix.rows || column < 0 || column >= matrix.columns {
+            return error(.MATRIX_INDEX_OUT_OF_RANGE, "Index ${row},${column} is outside a ${matrix.rows}x${matrix.columns} matrix")
+        }
+        err = validate_matrix_value(value)
+        if err != nil {
+            return err
+        }
+        matrix.data[row * matrix.columns + column] = value
+        return nil
+    }
+
+    #doc("Adds the passed matrices(left, right). Both must have the same size")
+    fn add(left Matrix, right Matrix) -> (Matrix, Error) {
+        mut err = validate_matrix(left)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        err = validate_matrix(right)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        if left.rows != right.rows || left.columns != right.columns {
+            return empty_matrix(), error(.MATRIX_DIMENSION_MISMATCH, "Cannot add a ${left.rows}x${left.columns} matrix and a ${right.rows}x${right.columns} matrix")
+        }
+        mut data [f64] = zeros(left.rows * left.columns)
+        for index in range(0, len(data)) {
+            data[index] = left.data[index] + right.data[index]
+        }
+        return Matrix{rows: left.rows, columns: left.columns, data: data}, nil
+    }
+
+    #doc("Subtracts the passed matrix(right) from the passed matrix(left). Both must have the same size")
+    fn subtract(left Matrix, right Matrix) -> (Matrix, Error) {
+        mut err = validate_matrix(left)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        err = validate_matrix(right)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        if left.rows != right.rows || left.columns != right.columns {
+            return empty_matrix(), error(.MATRIX_DIMENSION_MISMATCH, "Cannot subtract a ${right.rows}x${right.columns} matrix from a ${left.rows}x${left.columns} matrix")
+        }
+        mut data [f64] = zeros(left.rows * left.columns)
+        for index in range(0, len(data)) {
+            data[index] = left.data[index] - right.data[index]
+        }
+        return Matrix{rows: left.rows, columns: left.columns, data: data}, nil
+    }
+
+    #doc("Multiplies each value of the passed matrix(matrix) by the passed factor(factor)")
+    fn scale(matrix Matrix, factor f64) -> (Matrix, Error) {
+        mut err = validate_matrix(matrix)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        err = validate_matrix_value(factor)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        mut data [f64] = zeros(matrix.rows * matrix.columns)
+        for index in range(0, len(data)) {
+            data[index] = matrix.data[index] * factor
+        }
+        return Matrix{rows: matrix.rows, columns: matrix.columns, data: data}, nil
+    }
+
+    #doc("Multiplies the passed matrices(left, right). The columns of left must equal the rows of right")
+    fn multiply(left Matrix, right Matrix) -> (Matrix, Error) {
+        mut err = validate_matrix(left)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        err = validate_matrix(right)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        if left.columns != right.rows {
+            return empty_matrix(), error(.MATRIX_DIMENSION_MISMATCH, "Cannot multiply a ${left.rows}x${left.columns} matrix by a ${right.rows}x${right.columns} matrix")
+        }
+        mut data [f64] = zeros(left.rows * right.columns)
+        for row in range(0, left.rows) {
+            for column in range(0, right.columns) {
+                mut total f64 = 0.0
+                for inner in range(0, left.columns) {
+                    total += left.data[row * left.columns + inner] * right.data[inner * right.columns + column]
+                }
+                data[row * right.columns + column] = total
+            }
+        }
+        err = validate_matrix_result(data)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        return Matrix{rows: left.rows, columns: right.columns, data: data}, nil
+    }
+
+    #doc("Transposes the passed matrix(matrix), swapping its rows and columns")
+    fn transpose(matrix Matrix) -> (Matrix, Error) {
+        mut err = validate_matrix(matrix)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        mut data [f64] = zeros(matrix.rows * matrix.columns)
+        for row in range(0, matrix.rows) {
+            for column in range(0, matrix.columns) {
+                data[column * matrix.rows + row] = matrix.data[row * matrix.columns + column]
+            }
+        }
+        return Matrix{rows: matrix.columns, columns: matrix.rows, data: data}, nil
+    }
+
+    #doc("Calculates the determinant of the passed square matrix(matrix)")
+    fn determinant(matrix Matrix) -> (f64, Error) {
+        mut err = validate_matrix(matrix)
+        if err != nil {
+            return MIN_MATRIX_VALUE, err
+        }
+        if matrix.rows != matrix.columns {
+            return MIN_MATRIX_VALUE, error(.MATRIX_NOT_SQUARE, "A ${matrix.rows}x${matrix.columns} matrix has no determinant")
+        }
+        mut size i64 = matrix.rows
+        mut work [f64] = matrix.data
+        mut result f64 = 1.0
+        for column in range(0, size) {
+            mut pivotRow i64 = column
+            mut pivotValue f64 = math.abs(work[column * size + column])
+            for row in range(column + 1, size) {
+                mut candidate f64 = math.abs(work[row * size + column])
+                if candidate > pivotValue {
+                    pivotValue = candidate
+                    pivotRow = row
+                }
+            }
+            if pivotValue == 0.0 {
+                return 0.0, nil
+            }
+            if pivotRow != column {
+                for index in range(0, size) {
+                    mut held f64 = work[column * size + index]
+                    work[column * size + index] = work[pivotRow * size + index]
+                    work[pivotRow * size + index] = held
+                }
+                result = -result
+            }
+            mut pivot f64 = work[column * size + column]
+            result = result * pivot
+            for row in range(column + 1, size) {
+                mut ratio f64 = work[row * size + column] / pivot
+                for index in range(column, size) {
+                    work[row * size + index] = work[row * size + index] - ratio * work[column * size + index]
+                }
+            }
+        }
+        if !math.is_finite(result) {
+            return MIN_MATRIX_VALUE, error(.MATRIX_RESULT_OUT_OF_RANGE, "Result is out of range")
+        }
+        return result, nil
+    }
+
+    #doc("Inverts the passed square matrix(matrix). Returns an error if it is singular")
+    fn inverse(matrix Matrix) -> (Matrix, Error) {
+        mut err = validate_matrix(matrix)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        if matrix.rows != matrix.columns {
+            return empty_matrix(), error(.MATRIX_NOT_SQUARE, "A ${matrix.rows}x${matrix.columns} matrix has no inverse")
+        }
+        mut size i64 = matrix.rows
+        mut work [f64] = matrix.data
+        mut inverted [f64] = zeros(size * size)
+        mut largest f64 = 0.0
+        for index in range(0, size) {
+            inverted[index * size + index] = 1.0
+        }
+        for_each val in work {
+            if math.abs(val) > largest {
+                largest = math.abs(val)
+            }
+        }
+        for column in range(0, size) {
+            mut pivotRow i64 = column
+            mut pivotValue f64 = math.abs(work[column * size + column])
+            for row in range(column + 1, size) {
+                mut candidate f64 = math.abs(work[row * size + column])
+                if candidate > pivotValue {
+                    pivotValue = candidate
+                    pivotRow = row
+                }
+            }
+            if pivotValue <= MATRIX_EPSILON * largest {
+                return empty_matrix(), error(.MATRIX_SINGULAR, "Matrix is singular and has no inverse")
+            }
+            if pivotRow != column {
+                for index in range(0, size) {
+                    mut held f64 = work[column * size + index]
+                    work[column * size + index] = work[pivotRow * size + index]
+                    work[pivotRow * size + index] = held
+                    mut heldInverse f64 = inverted[column * size + index]
+                    inverted[column * size + index] = inverted[pivotRow * size + index]
+                    inverted[pivotRow * size + index] = heldInverse
+                }
+            }
+            mut pivot f64 = work[column * size + column]
+            for index in range(0, size) {
+                work[column * size + index] = work[column * size + index] / pivot
+                inverted[column * size + index] = inverted[column * size + index] / pivot
+            }
+            for row in range(0, size) {
+                if row != column {
+                    mut ratio f64 = work[row * size + column]
+                    for index in range(0, size) {
+                        work[row * size + index] = work[row * size + index] - ratio * work[column * size + index]
+                        inverted[row * size + index] = inverted[row * size + index] - ratio * inverted[column * size + index]
+                    }
+                }
+            }
+        }
+        err = validate_matrix_result(inverted)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        return Matrix{rows: size, columns: size, data: inverted}, nil
+    }
+
+    #doc("Creates a 4x4 matrix that translates by the passed x, y and z distances")
+    fn translation(x, y, z f64) -> (Matrix, Error) {
+        mut err = validate_matrix_value(x)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        err = validate_matrix_value(y)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        err = validate_matrix_value(z)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        mut result, resultErr = from_array(4, 4, {1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0})
+        return result, resultErr
+    }
+
+    #doc("Creates a 4x4 matrix that scales by the passed x, y and z factors")
+    fn scaling(x, y, z f64) -> (Matrix, Error) {
+        mut err = validate_matrix_value(x)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        err = validate_matrix_value(y)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        err = validate_matrix_value(z)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        mut result, resultErr = from_array(4, 4, {x, 0.0, 0.0, 0.0, 0.0, y, 0.0, 0.0, 0.0, 0.0, z, 0.0, 0.0, 0.0, 0.0, 1.0})
+        return result, resultErr
+    }
+
+    #doc("Creates a 4x4 matrix that rotates around the x axis by the passed angle in radians(angle)")
+    fn rotation_x(angle f64) -> (Matrix, Error) {
+        mut err = validate_matrix_value(angle)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        mut cosine f64 = math.cos(angle)
+        mut sine f64 = math.sin(angle)
+        mut result, resultErr = from_array(4, 4, {1.0, 0.0, 0.0, 0.0, 0.0, cosine, -sine, 0.0, 0.0, sine, cosine, 0.0, 0.0, 0.0, 0.0, 1.0})
+        return result, resultErr
+    }
+
+    #doc("Creates a 4x4 matrix that rotates around the y axis by the passed angle in radians(angle)")
+    fn rotation_y(angle f64) -> (Matrix, Error) {
+        mut err = validate_matrix_value(angle)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        mut cosine f64 = math.cos(angle)
+        mut sine f64 = math.sin(angle)
+        mut result, resultErr = from_array(4, 4, {cosine, 0.0, sine, 0.0, 0.0, 1.0, 0.0, 0.0, -sine, 0.0, cosine, 0.0, 0.0, 0.0, 0.0, 1.0})
+        return result, resultErr
+    }
+
+    #doc("Creates a 4x4 matrix that rotates around the z axis by the passed angle in radians(angle)")
+    fn rotation_z(angle f64) -> (Matrix, Error) {
+        mut err = validate_matrix_value(angle)
+        if err != nil {
+            return empty_matrix(), err
+        }
+        mut cosine f64 = math.cos(angle)
+        mut sine f64 = math.sin(angle)
+        mut result, resultErr = from_array(4, 4, {cosine, -sine, 0.0, 0.0, sine, cosine, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0})
+        return result, resultErr
+    }
+}
