@@ -1,0 +1,337 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @arrays
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_FINANCE_VALUE f64 = -1.0e15
+private const MAX_FINANCE_VALUE f64 = 1.0e15
+private const MIN_FINANCE_AMOUNT f64 = 0.0
+private const MAX_FINANCE_RATE f64 = 1000.0
+private const MAX_FINANCE_YEARS f64 = 1000.0
+private const MAX_FINANCE_FREQUENCY i64 = 366
+
+#error_code
+private const FinanceErrorCodes enum {
+    FINANCE_VAL_NEGATIVE
+    FINANCE_VAL_NOT_A_NUMBER
+    FINANCE_VAL_INFINITE
+    FINANCE_VAL_TOO_LARGE
+    FINANCE_RATE_OUT_OF_RANGE
+    FINANCE_INVALID_FREQUENCY
+    FINANCE_INVALID_PERIOD_COUNT
+    FINANCE_ZERO_VALUE
+    FINANCE_EMPTY_CASH_FLOWS
+    FINANCE_RESULT_OUT_OF_RANGE
+}
+
+private const FinanceParameter enum {
+    PRINCIPAL = "principal"
+    RATE = "rate"
+    YEARS = "years"
+    PERIODS = "periods"
+    PAYMENTS_PER_YEAR = "paymentsPerYear"
+    COMPOUNDS_PER_YEAR = "compoundsPerYear"
+    PRESENT_VALUE = "presentValue"
+    FUTURE_VALUE = "futureValue"
+    START_VALUE = "startValue"
+    END_VALUE = "endValue"
+    OLD_VALUE = "oldValue"
+    NEW_VALUE = "newValue"
+    CASH_FLOW = "cashFlow"
+}
+
+// Returns an error when val (the parameter name) is NaN, infinite or too large
+private fn validate_finance_value(val f64, name FinanceParameter) -> Error {
+    if math.is_nan(val) {
+        return error(.FINANCE_VAL_NOT_A_NUMBER, "${name} is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.FINANCE_VAL_INFINITE, "${name} is infinite")
+    }
+    if val < MIN_FINANCE_VALUE || val > MAX_FINANCE_VALUE {
+        return error(.FINANCE_VAL_TOO_LARGE, "${name} ${val} out of range, max magnitude is ${MAX_FINANCE_VALUE}")
+    }
+    return nil
+}
+
+// Returns an error when val (the parameter name) is invalid or negative
+private fn validate_finance_amount(val f64, name FinanceParameter) -> Error {
+    mut err = validate_finance_value(val, name)
+    if err != nil {
+        return err
+    }
+    if val < MIN_FINANCE_AMOUNT {
+        return error(.FINANCE_VAL_NEGATIVE, "${name} ${val} is negative, min is ${MIN_FINANCE_AMOUNT}")
+    }
+    return nil
+}
+
+// Returns an error when val (the parameter name) is not from 0 to the max number of years
+private fn validate_finance_years(val f64, name FinanceParameter) -> Error {
+    mut err = validate_finance_amount(val, name)
+    if err != nil {
+        return err
+    }
+    if val > MAX_FINANCE_YEARS {
+        return error(.FINANCE_VAL_TOO_LARGE, "${name} ${val} too large, max is ${MAX_FINANCE_YEARS}")
+    }
+    return nil
+}
+
+// Returns an error when val is NaN, infinite, at or below -1.0 or above the max rate
+private fn validate_finance_rate(val f64) -> Error {
+    mut err = validate_finance_value(val, .RATE)
+    if err != nil {
+        return err
+    }
+    if val <= -1.0 || val > MAX_FINANCE_RATE {
+        return error(.FINANCE_RATE_OUT_OF_RANGE, "rate ${val} out of range, must be above -1.0 and at most ${MAX_FINANCE_RATE}")
+    }
+    return nil
+}
+
+// Returns an error when count (the parameter name) is not from 1 to the max frequency
+private fn validate_finance_frequency(count i64, name FinanceParameter) -> Error {
+    if count < 1 || count > MAX_FINANCE_FREQUENCY {
+        return error(.FINANCE_INVALID_FREQUENCY, "${name} ${count} is invalid, must be from 1 to ${MAX_FINANCE_FREQUENCY}")
+    }
+    return nil
+}
+
+// Returns an error when result overflowed or is not a number
+private fn validate_finance_result(result f64) -> Error {
+    if !math.is_finite(result) {
+        return error(.FINANCE_RESULT_OUT_OF_RANGE, "Result is out of range")
+    }
+    return nil
+}
+
+#doc("One payment of a loan, with how much of it went to interest and to the principal, and the balance left after it")
+const AmortizationPayment struct {
+    number i64
+    payment, interest, principalPaid, balance f64
+}
+
+#[doc("Calculates the simple interest earned on the passed principal(principal) at the passed yearly rate(rate) over the passed years(years). Rates are decimals, so 5% is 0.05")]
+fn calculate_simple_interest(principal f64, rate f64, years f64) -> (f64, Error) {
+    mut err = validate_finance_amount(principal, .PRINCIPAL)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_rate(rate)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_years(years, .YEARS)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    mut result f64 = principal * rate * years
+    err = validate_finance_result(result)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates the compound interest earned on the passed principal(principal) at the passed yearly rate(rate) over the passed years(years), compounded the passed number of times per year(compoundsPerYear)")]
+fn calculate_compound_interest(principal f64, rate f64, years f64, compoundsPerYear i64) -> (f64, Error) {
+    mut err = validate_finance_amount(principal, .PRINCIPAL)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_rate(rate)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_years(years, .YEARS)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_frequency(compoundsPerYear, .COMPOUNDS_PER_YEAR)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    mut compounds f64 = cast(compoundsPerYear, f64)
+    mut result f64 = principal * math.pow(1.0 + rate / compounds, compounds * years) - principal
+    err = validate_finance_result(result)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates the future value of the passed present value(presentValue) after the passed number of periods(periods) at the passed rate per period(rate)")]
+fn calculate_future_value(presentValue f64, rate f64, periods f64) -> (f64, Error) {
+    mut err = validate_finance_amount(presentValue, .PRESENT_VALUE)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_rate(rate)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_amount(periods, .PERIODS)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    mut result f64 = presentValue * math.pow(1.0 + rate, periods)
+    err = validate_finance_result(result)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates the present value of the passed future value(futureValue) received after the passed number of periods(periods) at the passed rate per period(rate)")]
+fn calculate_present_value(futureValue f64, rate f64, periods f64) -> (f64, Error) {
+    mut err = validate_finance_amount(futureValue, .FUTURE_VALUE)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_rate(rate)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_amount(periods, .PERIODS)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    mut growth f64 = math.pow(1.0 + rate, periods)
+    err = validate_finance_result(growth)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    return futureValue / growth, nil
+}
+
+#[doc("Calculates the net present value of the passed cash flows(cashFlows) at the passed rate per period(rate). The first cash flow happens now and is not discounted")]
+fn calculate_net_present_value(rate f64, cashFlows [f64]) -> (f64, Error) {
+    mut err = validate_finance_rate(rate)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    if len(cashFlows) == 0 {
+        return MIN_FINANCE_VALUE, error(.FINANCE_EMPTY_CASH_FLOWS, "There are no cash flows")
+    }
+    mut total f64 = 0.0
+    mut period f64 = 0.0
+    for_each cashFlow in cashFlows {
+        err = validate_finance_value(cashFlow, .CASH_FLOW)
+        if err != nil {
+            return MIN_FINANCE_VALUE, err
+        }
+        total += cashFlow / math.pow(1.0 + rate, period)
+        period += 1.0
+    }
+    err = validate_finance_result(total)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    return total, nil
+}
+
+#[doc("Calculates the percent change from the passed old value(oldValue) to the passed new value(newValue). Returns 25.0 for a 25% increase. Returns an error if oldValue is zero")]
+fn calculate_percent_change(oldValue f64, newValue f64) -> (f64, Error) {
+    mut err = validate_finance_amount(oldValue, .OLD_VALUE)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_amount(newValue, .NEW_VALUE)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    if oldValue == 0.0 {
+        return MIN_FINANCE_VALUE, error(.FINANCE_ZERO_VALUE, "oldValue must not be zero")
+    }
+    return (newValue - oldValue) / oldValue * 100.0, nil
+}
+
+#[doc("Calculates the compound annual growth rate from the passed start value(startValue) to the passed end value(endValue) over the passed years(years). Returns a decimal, so 0.05 is 5%. Returns an error if startValue or years is zero")]
+fn calculate_compound_annual_growth_rate(startValue f64, endValue f64, years f64) -> (f64, Error) {
+    mut err = validate_finance_amount(startValue, .START_VALUE)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_amount(endValue, .END_VALUE)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_years(years, .YEARS)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    if startValue == 0.0 {
+        return MIN_FINANCE_VALUE, error(.FINANCE_ZERO_VALUE, "startValue must not be zero")
+    }
+    if years == 0.0 {
+        return MIN_FINANCE_VALUE, error(.FINANCE_ZERO_VALUE, "years must not be zero")
+    }
+    mut result f64 = math.pow(endValue / startValue, 1.0 / years) - 1.0
+    err = validate_finance_result(result)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates the payment of a loan of the passed principal(principal) at the passed yearly rate(rate), paid over the passed years(years) in the passed number of payments per year(paymentsPerYear). The total number of payments is rounded to a whole number and must be at least 1")]
+fn calculate_loan_payment(principal f64, rate f64, years f64, paymentsPerYear i64) -> (f64, Error) {
+    mut err = validate_finance_amount(principal, .PRINCIPAL)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_rate(rate)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_years(years, .YEARS)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    err = validate_finance_frequency(paymentsPerYear, .PAYMENTS_PER_YEAR)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    mut paymentCount i64 = cast(math.round(years * cast(paymentsPerYear, f64)), i64)
+    if paymentCount < 1 {
+        return MIN_FINANCE_VALUE, error(.FINANCE_INVALID_PERIOD_COUNT, "${years} years of ${paymentsPerYear} payments per year is less than 1 payment")
+    }
+    mut periodRate f64 = rate / cast(paymentsPerYear, f64)
+    if periodRate == 0.0 {
+        return principal / cast(paymentCount, f64), nil
+    }
+    mut result f64 = principal * periodRate / (1.0 - math.pow(1.0 + periodRate, -cast(paymentCount, f64)))
+    err = validate_finance_result(result)
+    if err != nil {
+        return MIN_FINANCE_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Builds the payment schedule of a loan of the passed principal(principal) at the passed yearly rate(rate), paid over the passed years(years) in the passed number of payments per year(paymentsPerYear). The last payment clears the remaining balance")]
+fn calculate_amortization_schedule(principal f64, rate f64, years f64, paymentsPerYear i64) -> ([AmortizationPayment], Error) {
+    mut schedule [AmortizationPayment] = {}
+    mut payment, err = calculate_loan_payment(principal, rate, years, paymentsPerYear)
+    if err != nil {
+        return schedule, err
+    }
+    mut paymentCount i64 = cast(math.round(years * cast(paymentsPerYear, f64)), i64)
+    mut periodRate f64 = rate / cast(paymentsPerYear, f64)
+    mut balance f64 = principal
+    for number in range(1, paymentCount + 1) {
+        mut interest f64 = balance * periodRate
+        mut principalPaid f64 = payment - interest
+        if number == paymentCount || principalPaid > balance {
+            principalPaid = balance
+        }
+        balance = balance - principalPaid
+        arrays.append(schedule, AmortizationPayment{number: number, payment: interest + principalPaid, interest: interest, principalPaid: principalPaid, balance: balance})
+    }
+    return schedule, nil
+}
