@@ -40,6 +40,11 @@ when err.code {
 | Temperature | `TEMPERATURE_VAL_BELOW_ABSOLUTE_ZERO`, `TEMPERATURE_VAL_NOT_A_NUMBER`, `TEMPERATURE_VAL_INFINITE`, `TEMPERATURE_VAL_TOO_LARGE` |
 | Volume | `VOLUME_VAL_NEGATIVE`, `VOLUME_VAL_NOT_A_NUMBER`, `VOLUME_VAL_INFINITE`, `VOLUME_VAL_TOO_LARGE` |
 | Speed | `SPEED_VAL_NEGATIVE`, `SPEED_VAL_NOT_A_NUMBER`, `SPEED_VAL_INFINITE`, `SPEED_VAL_TOO_LARGE` |
+| Pressure | `PRESSURE_VAL_NEGATIVE`, `PRESSURE_VAL_NOT_A_NUMBER`, `PRESSURE_VAL_INFINITE`, `PRESSURE_VAL_TOO_LARGE` |
+| Energy | `ENERGY_VAL_NEGATIVE`, `ENERGY_VAL_NOT_A_NUMBER`, `ENERGY_VAL_INFINITE`, `ENERGY_VAL_TOO_LARGE` |
+| Power | `POWER_VAL_NEGATIVE`, `POWER_VAL_NOT_A_NUMBER`, `POWER_VAL_INFINITE`, `POWER_VAL_TOO_LARGE` |
+| Frequency | `FREQUENCY_VAL_NEGATIVE`, `FREQUENCY_VAL_NOT_A_NUMBER`, `FREQUENCY_VAL_INFINITE`, `FREQUENCY_VAL_TOO_LARGE` |
+| Angle | `ANGLE_VAL_NOT_A_NUMBER`, `ANGLE_VAL_INFINITE`, `ANGLE_VAL_TOO_LARGE` |
 | Data Storage | `VAL_NEGATIVE`, `VAL_NOT_A_NUMBER`, `VAL_INFINITE`, `VAL_TOO_LARGE_FOR_BASE` |
 | Physics | `PHYSICS_VAL_NEGATIVE`, `PHYSICS_VAL_ZERO`, `PHYSICS_VAL_NOT_A_NUMBER`, `PHYSICS_VAL_INFINITE`, `PHYSICS_VAL_TOO_LARGE`, `PHYSICS_VAL_TOO_SMALL`, `PHYSICS_RESULT_OUT_OF_RANGE` |
 
@@ -120,6 +125,49 @@ fn main(){
     mut pressure, pressureErr = units.calculate_pressure(100.0, 4.0)   // Returns 25.0
     mut force, forceErr = units.calculate_force(2.0, 3.0)              // Returns 6.0
     mut acceleration, accelerationErr = units.calculate_acceleration_from_rest(2.0, 10.0)   // Returns 5.0
+}
+```
+
+### Pressure Conversions
+
+```gray
+fn main(){
+    mut psi, psiErr = units.bar_to_psi(1.0)                       // Returns 14.5038
+    mut pascals, pascalsErr = units.atmosphere_to_pascal(1.0)     // Returns 101325.0
+}
+```
+
+### Energy Conversions
+
+```gray
+fn main(){
+    mut joules, joulesErr = units.kilowatt_hour_to_joule(1.0)     // Returns 3600000.0
+    mut kilocalories, kilocaloriesErr = units.kilojoule_to_kilocalorie(4.184)   // Returns 1.0
+}
+```
+
+### Power Conversions
+
+```gray
+fn main(){
+    mut kilowatts, kilowattsErr = units.horsepower_to_kilowatt(1.0)   // Returns 0.7457
+}
+```
+
+### Angle Conversions
+
+```gray
+fn main(){
+    mut radians, radiansErr = units.degree_to_radian(180.0)   // Returns 3.14159
+    mut degrees, degreesErr = units.turn_to_degree(-0.5)      // Returns -180.0
+}
+```
+
+### Frequency Conversions
+
+```gray
+fn main(){
+    mut hertz, hertzErr = units.revolution_per_minute_to_hertz(60.0)   // Returns 1.0
 }
 ```
 
@@ -475,6 +523,262 @@ fn main(){
 | `calculate_acceleration_from_rest(duration f64, distance f64) -> (f64, Error)` | Calculates acceleration of an object starting from rest from the passed duration(duration) and distance(distance) |
 | `calculate_force_to_acceleration(force f64, mass f64) -> (f64, Error)` | Calculates acceleration from the passed force(force) and mass(mass) |
 
+### Pressure Functions
+
+#### Pascals
+
+| Function | Description |
+|----------|-------------|
+| `pascal_to_kilopascal(val f64) -> (f64, Error)` | Converts the passed pascals(val) to kilopascals |
+| `pascal_to_bar(val f64) -> (f64, Error)` | Converts the passed pascals(val) to bars |
+| `pascal_to_atmosphere(val f64) -> (f64, Error)` | Converts the passed pascals(val) to atmospheres |
+| `pascal_to_psi(val f64) -> (f64, Error)` | Converts the passed pascals(val) to pounds per square inch |
+| `pascal_to_millimeter_of_mercury(val f64) -> (f64, Error)` | Converts the passed pascals(val) to millimeters of mercury |
+
+#### Kilopascals
+
+| Function | Description |
+|----------|-------------|
+| `kilopascal_to_pascal(val f64) -> (f64, Error)` | Converts the passed kilopascals(val) to pascals |
+| `kilopascal_to_bar(val f64) -> (f64, Error)` | Converts the passed kilopascals(val) to bars |
+| `kilopascal_to_atmosphere(val f64) -> (f64, Error)` | Converts the passed kilopascals(val) to atmospheres |
+| `kilopascal_to_psi(val f64) -> (f64, Error)` | Converts the passed kilopascals(val) to pounds per square inch |
+| `kilopascal_to_millimeter_of_mercury(val f64) -> (f64, Error)` | Converts the passed kilopascals(val) to millimeters of mercury |
+
+#### Bars
+
+| Function | Description |
+|----------|-------------|
+| `bar_to_pascal(val f64) -> (f64, Error)` | Converts the passed bars(val) to pascals |
+| `bar_to_kilopascal(val f64) -> (f64, Error)` | Converts the passed bars(val) to kilopascals |
+| `bar_to_atmosphere(val f64) -> (f64, Error)` | Converts the passed bars(val) to atmospheres |
+| `bar_to_psi(val f64) -> (f64, Error)` | Converts the passed bars(val) to pounds per square inch |
+| `bar_to_millimeter_of_mercury(val f64) -> (f64, Error)` | Converts the passed bars(val) to millimeters of mercury |
+
+#### Atmospheres
+
+| Function | Description |
+|----------|-------------|
+| `atmosphere_to_pascal(val f64) -> (f64, Error)` | Converts the passed atmospheres(val) to pascals |
+| `atmosphere_to_kilopascal(val f64) -> (f64, Error)` | Converts the passed atmospheres(val) to kilopascals |
+| `atmosphere_to_bar(val f64) -> (f64, Error)` | Converts the passed atmospheres(val) to bars |
+| `atmosphere_to_psi(val f64) -> (f64, Error)` | Converts the passed atmospheres(val) to pounds per square inch |
+| `atmosphere_to_millimeter_of_mercury(val f64) -> (f64, Error)` | Converts the passed atmospheres(val) to millimeters of mercury |
+
+#### Pounds per square inch
+
+| Function | Description |
+|----------|-------------|
+| `psi_to_pascal(val f64) -> (f64, Error)` | Converts the passed pounds per square inch(val) to pascals |
+| `psi_to_kilopascal(val f64) -> (f64, Error)` | Converts the passed pounds per square inch(val) to kilopascals |
+| `psi_to_bar(val f64) -> (f64, Error)` | Converts the passed pounds per square inch(val) to bars |
+| `psi_to_atmosphere(val f64) -> (f64, Error)` | Converts the passed pounds per square inch(val) to atmospheres |
+| `psi_to_millimeter_of_mercury(val f64) -> (f64, Error)` | Converts the passed pounds per square inch(val) to millimeters of mercury |
+
+#### Millimeters of mercury
+
+| Function | Description |
+|----------|-------------|
+| `millimeter_of_mercury_to_pascal(val f64) -> (f64, Error)` | Converts the passed millimeters of mercury(val) to pascals |
+| `millimeter_of_mercury_to_kilopascal(val f64) -> (f64, Error)` | Converts the passed millimeters of mercury(val) to kilopascals |
+| `millimeter_of_mercury_to_bar(val f64) -> (f64, Error)` | Converts the passed millimeters of mercury(val) to bars |
+| `millimeter_of_mercury_to_atmosphere(val f64) -> (f64, Error)` | Converts the passed millimeters of mercury(val) to atmospheres |
+| `millimeter_of_mercury_to_psi(val f64) -> (f64, Error)` | Converts the passed millimeters of mercury(val) to pounds per square inch |
+
+### Energy Functions
+
+#### Joules
+
+| Function | Description |
+|----------|-------------|
+| `joule_to_kilojoule(val f64) -> (f64, Error)` | Converts the passed joules(val) to kilojoules |
+| `joule_to_calorie(val f64) -> (f64, Error)` | Converts the passed joules(val) to calories |
+| `joule_to_kilocalorie(val f64) -> (f64, Error)` | Converts the passed joules(val) to kilocalories |
+| `joule_to_watt_hour(val f64) -> (f64, Error)` | Converts the passed joules(val) to watt hours |
+| `joule_to_kilowatt_hour(val f64) -> (f64, Error)` | Converts the passed joules(val) to kilowatt hours |
+| `joule_to_btu(val f64) -> (f64, Error)` | Converts the passed joules(val) to British thermal units |
+
+#### Kilojoules
+
+| Function | Description |
+|----------|-------------|
+| `kilojoule_to_joule(val f64) -> (f64, Error)` | Converts the passed kilojoules(val) to joules |
+| `kilojoule_to_calorie(val f64) -> (f64, Error)` | Converts the passed kilojoules(val) to calories |
+| `kilojoule_to_kilocalorie(val f64) -> (f64, Error)` | Converts the passed kilojoules(val) to kilocalories |
+| `kilojoule_to_watt_hour(val f64) -> (f64, Error)` | Converts the passed kilojoules(val) to watt hours |
+| `kilojoule_to_kilowatt_hour(val f64) -> (f64, Error)` | Converts the passed kilojoules(val) to kilowatt hours |
+| `kilojoule_to_btu(val f64) -> (f64, Error)` | Converts the passed kilojoules(val) to British thermal units |
+
+#### Calories
+
+| Function | Description |
+|----------|-------------|
+| `calorie_to_joule(val f64) -> (f64, Error)` | Converts the passed calories(val) to joules |
+| `calorie_to_kilojoule(val f64) -> (f64, Error)` | Converts the passed calories(val) to kilojoules |
+| `calorie_to_kilocalorie(val f64) -> (f64, Error)` | Converts the passed calories(val) to kilocalories |
+| `calorie_to_watt_hour(val f64) -> (f64, Error)` | Converts the passed calories(val) to watt hours |
+| `calorie_to_kilowatt_hour(val f64) -> (f64, Error)` | Converts the passed calories(val) to kilowatt hours |
+| `calorie_to_btu(val f64) -> (f64, Error)` | Converts the passed calories(val) to British thermal units |
+
+#### Kilocalories
+
+| Function | Description |
+|----------|-------------|
+| `kilocalorie_to_joule(val f64) -> (f64, Error)` | Converts the passed kilocalories(val) to joules |
+| `kilocalorie_to_kilojoule(val f64) -> (f64, Error)` | Converts the passed kilocalories(val) to kilojoules |
+| `kilocalorie_to_calorie(val f64) -> (f64, Error)` | Converts the passed kilocalories(val) to calories |
+| `kilocalorie_to_watt_hour(val f64) -> (f64, Error)` | Converts the passed kilocalories(val) to watt hours |
+| `kilocalorie_to_kilowatt_hour(val f64) -> (f64, Error)` | Converts the passed kilocalories(val) to kilowatt hours |
+| `kilocalorie_to_btu(val f64) -> (f64, Error)` | Converts the passed kilocalories(val) to British thermal units |
+
+#### Watt hours
+
+| Function | Description |
+|----------|-------------|
+| `watt_hour_to_joule(val f64) -> (f64, Error)` | Converts the passed watt hours(val) to joules |
+| `watt_hour_to_kilojoule(val f64) -> (f64, Error)` | Converts the passed watt hours(val) to kilojoules |
+| `watt_hour_to_calorie(val f64) -> (f64, Error)` | Converts the passed watt hours(val) to calories |
+| `watt_hour_to_kilocalorie(val f64) -> (f64, Error)` | Converts the passed watt hours(val) to kilocalories |
+| `watt_hour_to_kilowatt_hour(val f64) -> (f64, Error)` | Converts the passed watt hours(val) to kilowatt hours |
+| `watt_hour_to_btu(val f64) -> (f64, Error)` | Converts the passed watt hours(val) to British thermal units |
+
+#### Kilowatt hours
+
+| Function | Description |
+|----------|-------------|
+| `kilowatt_hour_to_joule(val f64) -> (f64, Error)` | Converts the passed kilowatt hours(val) to joules |
+| `kilowatt_hour_to_kilojoule(val f64) -> (f64, Error)` | Converts the passed kilowatt hours(val) to kilojoules |
+| `kilowatt_hour_to_calorie(val f64) -> (f64, Error)` | Converts the passed kilowatt hours(val) to calories |
+| `kilowatt_hour_to_kilocalorie(val f64) -> (f64, Error)` | Converts the passed kilowatt hours(val) to kilocalories |
+| `kilowatt_hour_to_watt_hour(val f64) -> (f64, Error)` | Converts the passed kilowatt hours(val) to watt hours |
+| `kilowatt_hour_to_btu(val f64) -> (f64, Error)` | Converts the passed kilowatt hours(val) to British thermal units |
+
+#### British thermal units
+
+| Function | Description |
+|----------|-------------|
+| `btu_to_joule(val f64) -> (f64, Error)` | Converts the passed British thermal units(val) to joules |
+| `btu_to_kilojoule(val f64) -> (f64, Error)` | Converts the passed British thermal units(val) to kilojoules |
+| `btu_to_calorie(val f64) -> (f64, Error)` | Converts the passed British thermal units(val) to calories |
+| `btu_to_kilocalorie(val f64) -> (f64, Error)` | Converts the passed British thermal units(val) to kilocalories |
+| `btu_to_watt_hour(val f64) -> (f64, Error)` | Converts the passed British thermal units(val) to watt hours |
+| `btu_to_kilowatt_hour(val f64) -> (f64, Error)` | Converts the passed British thermal units(val) to kilowatt hours |
+
+### Power Functions
+
+#### Watts
+
+| Function | Description |
+|----------|-------------|
+| `watt_to_kilowatt(val f64) -> (f64, Error)` | Converts the passed watts(val) to kilowatts |
+| `watt_to_megawatt(val f64) -> (f64, Error)` | Converts the passed watts(val) to megawatts |
+| `watt_to_horsepower(val f64) -> (f64, Error)` | Converts the passed watts(val) to horsepower |
+
+#### Kilowatts
+
+| Function | Description |
+|----------|-------------|
+| `kilowatt_to_watt(val f64) -> (f64, Error)` | Converts the passed kilowatts(val) to watts |
+| `kilowatt_to_megawatt(val f64) -> (f64, Error)` | Converts the passed kilowatts(val) to megawatts |
+| `kilowatt_to_horsepower(val f64) -> (f64, Error)` | Converts the passed kilowatts(val) to horsepower |
+
+#### Megawatts
+
+| Function | Description |
+|----------|-------------|
+| `megawatt_to_watt(val f64) -> (f64, Error)` | Converts the passed megawatts(val) to watts |
+| `megawatt_to_kilowatt(val f64) -> (f64, Error)` | Converts the passed megawatts(val) to kilowatts |
+| `megawatt_to_horsepower(val f64) -> (f64, Error)` | Converts the passed megawatts(val) to horsepower |
+
+#### Horsepower
+
+| Function | Description |
+|----------|-------------|
+| `horsepower_to_watt(val f64) -> (f64, Error)` | Converts the passed horsepower(val) to watts |
+| `horsepower_to_kilowatt(val f64) -> (f64, Error)` | Converts the passed horsepower(val) to kilowatts |
+| `horsepower_to_megawatt(val f64) -> (f64, Error)` | Converts the passed horsepower(val) to megawatts |
+
+### Angle Functions
+
+#### Radians
+
+| Function | Description |
+|----------|-------------|
+| `radian_to_degree(val f64) -> (f64, Error)` | Converts the passed radians(val) to degrees |
+| `radian_to_gradian(val f64) -> (f64, Error)` | Converts the passed radians(val) to gradians |
+| `radian_to_turn(val f64) -> (f64, Error)` | Converts the passed radians(val) to turns |
+
+#### Degrees
+
+| Function | Description |
+|----------|-------------|
+| `degree_to_radian(val f64) -> (f64, Error)` | Converts the passed degrees(val) to radians |
+| `degree_to_gradian(val f64) -> (f64, Error)` | Converts the passed degrees(val) to gradians |
+| `degree_to_turn(val f64) -> (f64, Error)` | Converts the passed degrees(val) to turns |
+
+#### Gradians
+
+| Function | Description |
+|----------|-------------|
+| `gradian_to_radian(val f64) -> (f64, Error)` | Converts the passed gradians(val) to radians |
+| `gradian_to_degree(val f64) -> (f64, Error)` | Converts the passed gradians(val) to degrees |
+| `gradian_to_turn(val f64) -> (f64, Error)` | Converts the passed gradians(val) to turns |
+
+#### Turns
+
+| Function | Description |
+|----------|-------------|
+| `turn_to_radian(val f64) -> (f64, Error)` | Converts the passed turns(val) to radians |
+| `turn_to_degree(val f64) -> (f64, Error)` | Converts the passed turns(val) to degrees |
+| `turn_to_gradian(val f64) -> (f64, Error)` | Converts the passed turns(val) to gradians |
+
+### Frequency Functions
+
+#### Hertz
+
+| Function | Description |
+|----------|-------------|
+| `hertz_to_kilohertz(val f64) -> (f64, Error)` | Converts the passed hertz(val) to kilohertz |
+| `hertz_to_megahertz(val f64) -> (f64, Error)` | Converts the passed hertz(val) to megahertz |
+| `hertz_to_gigahertz(val f64) -> (f64, Error)` | Converts the passed hertz(val) to gigahertz |
+| `hertz_to_revolution_per_minute(val f64) -> (f64, Error)` | Converts the passed hertz(val) to revolutions per minute |
+
+#### Kilohertz
+
+| Function | Description |
+|----------|-------------|
+| `kilohertz_to_hertz(val f64) -> (f64, Error)` | Converts the passed kilohertz(val) to hertz |
+| `kilohertz_to_megahertz(val f64) -> (f64, Error)` | Converts the passed kilohertz(val) to megahertz |
+| `kilohertz_to_gigahertz(val f64) -> (f64, Error)` | Converts the passed kilohertz(val) to gigahertz |
+| `kilohertz_to_revolution_per_minute(val f64) -> (f64, Error)` | Converts the passed kilohertz(val) to revolutions per minute |
+
+#### Megahertz
+
+| Function | Description |
+|----------|-------------|
+| `megahertz_to_hertz(val f64) -> (f64, Error)` | Converts the passed megahertz(val) to hertz |
+| `megahertz_to_kilohertz(val f64) -> (f64, Error)` | Converts the passed megahertz(val) to kilohertz |
+| `megahertz_to_gigahertz(val f64) -> (f64, Error)` | Converts the passed megahertz(val) to gigahertz |
+| `megahertz_to_revolution_per_minute(val f64) -> (f64, Error)` | Converts the passed megahertz(val) to revolutions per minute |
+
+#### Gigahertz
+
+| Function | Description |
+|----------|-------------|
+| `gigahertz_to_hertz(val f64) -> (f64, Error)` | Converts the passed gigahertz(val) to hertz |
+| `gigahertz_to_kilohertz(val f64) -> (f64, Error)` | Converts the passed gigahertz(val) to kilohertz |
+| `gigahertz_to_megahertz(val f64) -> (f64, Error)` | Converts the passed gigahertz(val) to megahertz |
+| `gigahertz_to_revolution_per_minute(val f64) -> (f64, Error)` | Converts the passed gigahertz(val) to revolutions per minute |
+
+#### Revolutions per minute
+
+| Function | Description |
+|----------|-------------|
+| `revolution_per_minute_to_hertz(val f64) -> (f64, Error)` | Converts the passed revolutions per minute(val) to hertz |
+| `revolution_per_minute_to_kilohertz(val f64) -> (f64, Error)` | Converts the passed revolutions per minute(val) to kilohertz |
+| `revolution_per_minute_to_megahertz(val f64) -> (f64, Error)` | Converts the passed revolutions per minute(val) to megahertz |
+| `revolution_per_minute_to_gigahertz(val f64) -> (f64, Error)` | Converts the passed revolutions per minute(val) to gigahertz |
+
 ### Constants
 
 **Length:** `CM_PER_METER`, `METERS_PER_KM`, `INCHES_PER_FOOT`, `FEET_PER_YARD`, `FEET_PER_MILE`, `YARDS_PER_MILE`, `CM_PER_INCH`, `METERS_PER_INCH`, `CM_PER_FOOT`, `METERS_PER_FOOT`, `METERS_PER_YARD`, `METERS_PER_MILE`, `KM_PER_MILE`, `INCHES_PER_CM`, `INCHES_PER_METER`, `FEET_PER_METER`, `YARDS_PER_METER`, `MILES_PER_KM`, `FEET_PER_KM`
@@ -491,4 +795,14 @@ fn main(){
 
 **Data Storage:** `BYTES_PER_KB`, `KB_PER_MB`, `MB_PER_GB`, `GB_PER_TB`, `TB_PER_PB`, `BYTES_PER_MB`, `BYTES_PER_GB`, `BYTES_PER_TB`, `BYTES_PER_PB`, `BYTES_PER_KIB`, `KIB_PER_MIB`, `MIB_PER_GIB`, `GIB_PER_TIB`, `TIB_PER_PIB`, `BYTES_PER_MIB`, `BYTES_PER_GIB`, `BYTES_PER_TIB`, `BYTES_PER_PIB`
 
-**Physics:** `STANDARD_GRAVITY_METERS_PER_SECOND_SQUARED`, `STANDARD_GRAVITY_FEET_PER_SECOND_SQUARED`, `SPEED_OF_LIGHT_METERS_PER_SECOND`, `SPEED_OF_SOUND_METERS_PER_SECOND`, `STANDARD_ATMOSPHERE_PASCALS`, `PASCALS_PER_BAR`, `PASCALS_PER_PSI`, `PASCALS_PER_MILLIMETER_OF_MERCURY`
+**Physics:** `STANDARD_GRAVITY_METERS_PER_SECOND_SQUARED`, `STANDARD_GRAVITY_FEET_PER_SECOND_SQUARED`, `SPEED_OF_LIGHT_METERS_PER_SECOND`, `SPEED_OF_SOUND_METERS_PER_SECOND`
+
+**Pressure:** `PASCALS_PER_KILOPASCAL`, `PASCALS_PER_BAR`, `STANDARD_ATMOSPHERE_PASCALS`, `PASCALS_PER_PSI`, `PASCALS_PER_MILLIMETER_OF_MERCURY`
+
+**Energy:** `JOULES_PER_KILOJOULE`, `JOULES_PER_CALORIE`, `JOULES_PER_KILOCALORIE`, `JOULES_PER_WATT_HOUR`, `JOULES_PER_KILOWATT_HOUR`, `JOULES_PER_BTU`
+
+**Power:** `WATTS_PER_KILOWATT`, `WATTS_PER_MEGAWATT`, `WATTS_PER_HORSEPOWER`
+
+**Frequency:** `HERTZ_PER_KILOHERTZ`, `HERTZ_PER_MEGAHERTZ`, `HERTZ_PER_GIGAHERTZ`, `HERTZ_PER_RPM`
+
+**Angle:** `RADIANS_PER_DEGREE`, `RADIANS_PER_GRADIAN`, `RADIANS_PER_TURN`

@@ -1,0 +1,451 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_ENERGY_VALUE f64 = 0.0
+private const MAX_ENERGY_VALUE f64 = 1.0e300
+
+/*********************************
+ENERGY CONSTANTS
+*********************************/
+const JOULES_PER_KILOJOULE f64 = 1000.0
+const JOULES_PER_CALORIE f64 = 4.184
+const JOULES_PER_KILOCALORIE f64 = 4184.0
+const JOULES_PER_WATT_HOUR f64 = 3600.0
+const JOULES_PER_KILOWATT_HOUR f64 = 3600000.0
+const JOULES_PER_BTU f64 = 1055.06
+
+#error_code
+private const EnergyErrorCodes enum {
+    ENERGY_VAL_NEGATIVE
+    ENERGY_VAL_NOT_A_NUMBER
+    ENERGY_VAL_INFINITE
+    ENERGY_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid energy
+private fn validate_energy(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.ENERGY_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.ENERGY_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_ENERGY_VALUE {
+        return error(.ENERGY_VAL_NEGATIVE, "Value ${val} is negative, min is ${MIN_ENERGY_VALUE}")
+    }
+    if val > MAX_ENERGY_VALUE {
+        return error(.ENERGY_VAL_TOO_LARGE, "Value ${val} too large, max is ${MAX_ENERGY_VALUE}")
+    }
+    return nil
+}
+
+/*********************************
+JOULES CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed joules(val) to kilojoules")]
+fn joule_to_kilojoule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val / JOULES_PER_KILOJOULE, nil
+}
+
+#[doc("Converts the passed joules(val) to calories")]
+fn joule_to_calorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val / JOULES_PER_CALORIE, nil
+}
+
+#[doc("Converts the passed joules(val) to kilocalories")]
+fn joule_to_kilocalorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val / JOULES_PER_KILOCALORIE, nil
+}
+
+#[doc("Converts the passed joules(val) to watt hours")]
+fn joule_to_watt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val / JOULES_PER_WATT_HOUR, nil
+}
+
+#[doc("Converts the passed joules(val) to kilowatt hours")]
+fn joule_to_kilowatt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val / JOULES_PER_KILOWATT_HOUR, nil
+}
+
+#[doc("Converts the passed joules(val) to British thermal units")]
+fn joule_to_btu(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val / JOULES_PER_BTU, nil
+}
+
+
+/*********************************
+KILOJOULES CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed kilojoules(val) to joules")]
+fn kilojoule_to_joule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOJOULE, nil
+}
+
+#[doc("Converts the passed kilojoules(val) to calories")]
+fn kilojoule_to_calorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOJOULE / JOULES_PER_CALORIE, nil
+}
+
+#[doc("Converts the passed kilojoules(val) to kilocalories")]
+fn kilojoule_to_kilocalorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOJOULE / JOULES_PER_KILOCALORIE, nil
+}
+
+#[doc("Converts the passed kilojoules(val) to watt hours")]
+fn kilojoule_to_watt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOJOULE / JOULES_PER_WATT_HOUR, nil
+}
+
+#[doc("Converts the passed kilojoules(val) to kilowatt hours")]
+fn kilojoule_to_kilowatt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOJOULE / JOULES_PER_KILOWATT_HOUR, nil
+}
+
+#[doc("Converts the passed kilojoules(val) to British thermal units")]
+fn kilojoule_to_btu(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOJOULE / JOULES_PER_BTU, nil
+}
+
+
+/*********************************
+CALORIES CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed calories(val) to joules")]
+fn calorie_to_joule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_CALORIE, nil
+}
+
+#[doc("Converts the passed calories(val) to kilojoules")]
+fn calorie_to_kilojoule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_CALORIE / JOULES_PER_KILOJOULE, nil
+}
+
+#[doc("Converts the passed calories(val) to kilocalories")]
+fn calorie_to_kilocalorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_CALORIE / JOULES_PER_KILOCALORIE, nil
+}
+
+#[doc("Converts the passed calories(val) to watt hours")]
+fn calorie_to_watt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_CALORIE / JOULES_PER_WATT_HOUR, nil
+}
+
+#[doc("Converts the passed calories(val) to kilowatt hours")]
+fn calorie_to_kilowatt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_CALORIE / JOULES_PER_KILOWATT_HOUR, nil
+}
+
+#[doc("Converts the passed calories(val) to British thermal units")]
+fn calorie_to_btu(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_CALORIE / JOULES_PER_BTU, nil
+}
+
+
+/*********************************
+KILOCALORIES CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed kilocalories(val) to joules")]
+fn kilocalorie_to_joule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOCALORIE, nil
+}
+
+#[doc("Converts the passed kilocalories(val) to kilojoules")]
+fn kilocalorie_to_kilojoule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOCALORIE / JOULES_PER_KILOJOULE, nil
+}
+
+#[doc("Converts the passed kilocalories(val) to calories")]
+fn kilocalorie_to_calorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOCALORIE / JOULES_PER_CALORIE, nil
+}
+
+#[doc("Converts the passed kilocalories(val) to watt hours")]
+fn kilocalorie_to_watt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOCALORIE / JOULES_PER_WATT_HOUR, nil
+}
+
+#[doc("Converts the passed kilocalories(val) to kilowatt hours")]
+fn kilocalorie_to_kilowatt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOCALORIE / JOULES_PER_KILOWATT_HOUR, nil
+}
+
+#[doc("Converts the passed kilocalories(val) to British thermal units")]
+fn kilocalorie_to_btu(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOCALORIE / JOULES_PER_BTU, nil
+}
+
+
+/*********************************
+WATT HOURS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed watt hours(val) to joules")]
+fn watt_hour_to_joule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_WATT_HOUR, nil
+}
+
+#[doc("Converts the passed watt hours(val) to kilojoules")]
+fn watt_hour_to_kilojoule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_WATT_HOUR / JOULES_PER_KILOJOULE, nil
+}
+
+#[doc("Converts the passed watt hours(val) to calories")]
+fn watt_hour_to_calorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_WATT_HOUR / JOULES_PER_CALORIE, nil
+}
+
+#[doc("Converts the passed watt hours(val) to kilocalories")]
+fn watt_hour_to_kilocalorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_WATT_HOUR / JOULES_PER_KILOCALORIE, nil
+}
+
+#[doc("Converts the passed watt hours(val) to kilowatt hours")]
+fn watt_hour_to_kilowatt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_WATT_HOUR / JOULES_PER_KILOWATT_HOUR, nil
+}
+
+#[doc("Converts the passed watt hours(val) to British thermal units")]
+fn watt_hour_to_btu(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_WATT_HOUR / JOULES_PER_BTU, nil
+}
+
+
+/*********************************
+KILOWATT HOURS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed kilowatt hours(val) to joules")]
+fn kilowatt_hour_to_joule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOWATT_HOUR, nil
+}
+
+#[doc("Converts the passed kilowatt hours(val) to kilojoules")]
+fn kilowatt_hour_to_kilojoule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOWATT_HOUR / JOULES_PER_KILOJOULE, nil
+}
+
+#[doc("Converts the passed kilowatt hours(val) to calories")]
+fn kilowatt_hour_to_calorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOWATT_HOUR / JOULES_PER_CALORIE, nil
+}
+
+#[doc("Converts the passed kilowatt hours(val) to kilocalories")]
+fn kilowatt_hour_to_kilocalorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOWATT_HOUR / JOULES_PER_KILOCALORIE, nil
+}
+
+#[doc("Converts the passed kilowatt hours(val) to watt hours")]
+fn kilowatt_hour_to_watt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOWATT_HOUR / JOULES_PER_WATT_HOUR, nil
+}
+
+#[doc("Converts the passed kilowatt hours(val) to British thermal units")]
+fn kilowatt_hour_to_btu(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_KILOWATT_HOUR / JOULES_PER_BTU, nil
+}
+
+
+/*********************************
+BRITISH THERMAL UNITS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed British thermal units(val) to joules")]
+fn btu_to_joule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_BTU, nil
+}
+
+#[doc("Converts the passed British thermal units(val) to kilojoules")]
+fn btu_to_kilojoule(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_BTU / JOULES_PER_KILOJOULE, nil
+}
+
+#[doc("Converts the passed British thermal units(val) to calories")]
+fn btu_to_calorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_BTU / JOULES_PER_CALORIE, nil
+}
+
+#[doc("Converts the passed British thermal units(val) to kilocalories")]
+fn btu_to_kilocalorie(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_BTU / JOULES_PER_KILOCALORIE, nil
+}
+
+#[doc("Converts the passed British thermal units(val) to watt hours")]
+fn btu_to_watt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_BTU / JOULES_PER_WATT_HOUR, nil
+}
+
+#[doc("Converts the passed British thermal units(val) to kilowatt hours")]
+fn btu_to_kilowatt_hour(val f64) -> (f64, Error) {
+    mut err = validate_energy(val)
+    if err != nil {
+        return MIN_ENERGY_VALUE, err
+    }
+    return val * JOULES_PER_BTU / JOULES_PER_KILOWATT_HOUR, nil
+}

@@ -1,0 +1,162 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_ANGLE_VALUE f64 = -1.0e300
+private const MAX_ANGLE_VALUE f64 = 1.0e300
+
+/*********************************
+ANGLE CONSTANTS
+*********************************/
+const RADIANS_PER_DEGREE f64 = 0.017453292519943295
+const RADIANS_PER_GRADIAN f64 = 0.015707963267948967
+const RADIANS_PER_TURN f64 = 6.283185307179586
+
+#error_code
+private const AngleErrorCodes enum {
+    ANGLE_VAL_NOT_A_NUMBER
+    ANGLE_VAL_INFINITE
+    ANGLE_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid angle
+private fn validate_angle(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.ANGLE_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.ANGLE_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_ANGLE_VALUE || val > MAX_ANGLE_VALUE {
+        return error(.ANGLE_VAL_TOO_LARGE, "Value ${val} out of range, max magnitude is ${MAX_ANGLE_VALUE}")
+    }
+    return nil
+}
+
+/*********************************
+RADIANS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed radians(val) to degrees")]
+fn radian_to_degree(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val / RADIANS_PER_DEGREE, nil
+}
+
+#[doc("Converts the passed radians(val) to gradians")]
+fn radian_to_gradian(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val / RADIANS_PER_GRADIAN, nil
+}
+
+#[doc("Converts the passed radians(val) to turns")]
+fn radian_to_turn(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val / RADIANS_PER_TURN, nil
+}
+
+
+/*********************************
+DEGREES CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed degrees(val) to radians")]
+fn degree_to_radian(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_DEGREE, nil
+}
+
+#[doc("Converts the passed degrees(val) to gradians")]
+fn degree_to_gradian(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_DEGREE / RADIANS_PER_GRADIAN, nil
+}
+
+#[doc("Converts the passed degrees(val) to turns")]
+fn degree_to_turn(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_DEGREE / RADIANS_PER_TURN, nil
+}
+
+
+/*********************************
+GRADIANS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed gradians(val) to radians")]
+fn gradian_to_radian(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_GRADIAN, nil
+}
+
+#[doc("Converts the passed gradians(val) to degrees")]
+fn gradian_to_degree(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_GRADIAN / RADIANS_PER_DEGREE, nil
+}
+
+#[doc("Converts the passed gradians(val) to turns")]
+fn gradian_to_turn(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_GRADIAN / RADIANS_PER_TURN, nil
+}
+
+
+/*********************************
+TURNS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed turns(val) to radians")]
+fn turn_to_radian(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_TURN, nil
+}
+
+#[doc("Converts the passed turns(val) to degrees")]
+fn turn_to_degree(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_TURN / RADIANS_PER_DEGREE, nil
+}
+
+#[doc("Converts the passed turns(val) to gradians")]
+fn turn_to_gradian(val f64) -> (f64, Error) {
+    mut err = validate_angle(val)
+    if err != nil {
+        return MIN_ANGLE_VALUE, err
+    }
+    return val * RADIANS_PER_TURN / RADIANS_PER_GRADIAN, nil
+}

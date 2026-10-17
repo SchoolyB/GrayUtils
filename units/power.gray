@@ -1,0 +1,166 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_POWER_VALUE f64 = 0.0
+private const MAX_POWER_VALUE f64 = 1.0e300
+
+/*********************************
+POWER CONSTANTS
+*********************************/
+const WATTS_PER_KILOWATT f64 = 1000.0
+const WATTS_PER_MEGAWATT f64 = 1000000.0
+const WATTS_PER_HORSEPOWER f64 = 745.7
+
+#error_code
+private const PowerErrorCodes enum {
+    POWER_VAL_NEGATIVE
+    POWER_VAL_NOT_A_NUMBER
+    POWER_VAL_INFINITE
+    POWER_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid power
+private fn validate_power(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.POWER_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.POWER_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_POWER_VALUE {
+        return error(.POWER_VAL_NEGATIVE, "Value ${val} is negative, min is ${MIN_POWER_VALUE}")
+    }
+    if val > MAX_POWER_VALUE {
+        return error(.POWER_VAL_TOO_LARGE, "Value ${val} too large, max is ${MAX_POWER_VALUE}")
+    }
+    return nil
+}
+
+/*********************************
+WATTS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed watts(val) to kilowatts")]
+fn watt_to_kilowatt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val / WATTS_PER_KILOWATT, nil
+}
+
+#[doc("Converts the passed watts(val) to megawatts")]
+fn watt_to_megawatt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val / WATTS_PER_MEGAWATT, nil
+}
+
+#[doc("Converts the passed watts(val) to horsepower")]
+fn watt_to_horsepower(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val / WATTS_PER_HORSEPOWER, nil
+}
+
+
+/*********************************
+KILOWATTS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed kilowatts(val) to watts")]
+fn kilowatt_to_watt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_KILOWATT, nil
+}
+
+#[doc("Converts the passed kilowatts(val) to megawatts")]
+fn kilowatt_to_megawatt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_KILOWATT / WATTS_PER_MEGAWATT, nil
+}
+
+#[doc("Converts the passed kilowatts(val) to horsepower")]
+fn kilowatt_to_horsepower(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_KILOWATT / WATTS_PER_HORSEPOWER, nil
+}
+
+
+/*********************************
+MEGAWATTS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed megawatts(val) to watts")]
+fn megawatt_to_watt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_MEGAWATT, nil
+}
+
+#[doc("Converts the passed megawatts(val) to kilowatts")]
+fn megawatt_to_kilowatt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_MEGAWATT / WATTS_PER_KILOWATT, nil
+}
+
+#[doc("Converts the passed megawatts(val) to horsepower")]
+fn megawatt_to_horsepower(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_MEGAWATT / WATTS_PER_HORSEPOWER, nil
+}
+
+
+/*********************************
+HORSEPOWER CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed horsepower(val) to watts")]
+fn horsepower_to_watt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_HORSEPOWER, nil
+}
+
+#[doc("Converts the passed horsepower(val) to kilowatts")]
+fn horsepower_to_kilowatt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_HORSEPOWER / WATTS_PER_KILOWATT, nil
+}
+
+#[doc("Converts the passed horsepower(val) to megawatts")]
+fn horsepower_to_megawatt(val f64) -> (f64, Error) {
+    mut err = validate_power(val)
+    if err != nil {
+        return MIN_POWER_VALUE, err
+    }
+    return val * WATTS_PER_HORSEPOWER / WATTS_PER_MEGAWATT, nil
+}

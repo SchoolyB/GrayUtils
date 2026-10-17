@@ -1,0 +1,338 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_PRESSURE_VALUE f64 = 0.0
+private const MAX_PRESSURE_VALUE f64 = 1.0e300
+
+/*********************************
+PRESSURE CONSTANTS
+*********************************/
+const PASCALS_PER_KILOPASCAL f64 = 1000.0
+const PASCALS_PER_BAR f64 = 100000.0
+const STANDARD_ATMOSPHERE_PASCALS f64 = 101325.0
+const PASCALS_PER_PSI f64 = 6894.76
+const PASCALS_PER_MILLIMETER_OF_MERCURY f64 = 133.322
+
+#error_code
+private const PressureErrorCodes enum {
+    PRESSURE_VAL_NEGATIVE
+    PRESSURE_VAL_NOT_A_NUMBER
+    PRESSURE_VAL_INFINITE
+    PRESSURE_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid pressure
+private fn validate_pressure(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.PRESSURE_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.PRESSURE_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_PRESSURE_VALUE {
+        return error(.PRESSURE_VAL_NEGATIVE, "Value ${val} is negative, min is ${MIN_PRESSURE_VALUE}")
+    }
+    if val > MAX_PRESSURE_VALUE {
+        return error(.PRESSURE_VAL_TOO_LARGE, "Value ${val} too large, max is ${MAX_PRESSURE_VALUE}")
+    }
+    return nil
+}
+
+/*********************************
+PASCALS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed pascals(val) to kilopascals")]
+fn pascal_to_kilopascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val / PASCALS_PER_KILOPASCAL, nil
+}
+
+#[doc("Converts the passed pascals(val) to bars")]
+fn pascal_to_bar(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val / PASCALS_PER_BAR, nil
+}
+
+#[doc("Converts the passed pascals(val) to atmospheres")]
+fn pascal_to_atmosphere(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val / STANDARD_ATMOSPHERE_PASCALS, nil
+}
+
+#[doc("Converts the passed pascals(val) to pounds per square inch")]
+fn pascal_to_psi(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val / PASCALS_PER_PSI, nil
+}
+
+#[doc("Converts the passed pascals(val) to millimeters of mercury")]
+fn pascal_to_millimeter_of_mercury(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val / PASCALS_PER_MILLIMETER_OF_MERCURY, nil
+}
+
+
+/*********************************
+KILOPASCALS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed kilopascals(val) to pascals")]
+fn kilopascal_to_pascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_KILOPASCAL, nil
+}
+
+#[doc("Converts the passed kilopascals(val) to bars")]
+fn kilopascal_to_bar(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_KILOPASCAL / PASCALS_PER_BAR, nil
+}
+
+#[doc("Converts the passed kilopascals(val) to atmospheres")]
+fn kilopascal_to_atmosphere(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_KILOPASCAL / STANDARD_ATMOSPHERE_PASCALS, nil
+}
+
+#[doc("Converts the passed kilopascals(val) to pounds per square inch")]
+fn kilopascal_to_psi(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_KILOPASCAL / PASCALS_PER_PSI, nil
+}
+
+#[doc("Converts the passed kilopascals(val) to millimeters of mercury")]
+fn kilopascal_to_millimeter_of_mercury(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_KILOPASCAL / PASCALS_PER_MILLIMETER_OF_MERCURY, nil
+}
+
+
+/*********************************
+BARS CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed bars(val) to pascals")]
+fn bar_to_pascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_BAR, nil
+}
+
+#[doc("Converts the passed bars(val) to kilopascals")]
+fn bar_to_kilopascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_BAR / PASCALS_PER_KILOPASCAL, nil
+}
+
+#[doc("Converts the passed bars(val) to atmospheres")]
+fn bar_to_atmosphere(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_BAR / STANDARD_ATMOSPHERE_PASCALS, nil
+}
+
+#[doc("Converts the passed bars(val) to pounds per square inch")]
+fn bar_to_psi(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_BAR / PASCALS_PER_PSI, nil
+}
+
+#[doc("Converts the passed bars(val) to millimeters of mercury")]
+fn bar_to_millimeter_of_mercury(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_BAR / PASCALS_PER_MILLIMETER_OF_MERCURY, nil
+}
+
+
+/*********************************
+ATMOSPHERES CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed atmospheres(val) to pascals")]
+fn atmosphere_to_pascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * STANDARD_ATMOSPHERE_PASCALS, nil
+}
+
+#[doc("Converts the passed atmospheres(val) to kilopascals")]
+fn atmosphere_to_kilopascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * STANDARD_ATMOSPHERE_PASCALS / PASCALS_PER_KILOPASCAL, nil
+}
+
+#[doc("Converts the passed atmospheres(val) to bars")]
+fn atmosphere_to_bar(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * STANDARD_ATMOSPHERE_PASCALS / PASCALS_PER_BAR, nil
+}
+
+#[doc("Converts the passed atmospheres(val) to pounds per square inch")]
+fn atmosphere_to_psi(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * STANDARD_ATMOSPHERE_PASCALS / PASCALS_PER_PSI, nil
+}
+
+#[doc("Converts the passed atmospheres(val) to millimeters of mercury")]
+fn atmosphere_to_millimeter_of_mercury(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * STANDARD_ATMOSPHERE_PASCALS / PASCALS_PER_MILLIMETER_OF_MERCURY, nil
+}
+
+
+/*********************************
+POUNDS PER SQUARE INCH CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed pounds per square inch(val) to pascals")]
+fn psi_to_pascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_PSI, nil
+}
+
+#[doc("Converts the passed pounds per square inch(val) to kilopascals")]
+fn psi_to_kilopascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_PSI / PASCALS_PER_KILOPASCAL, nil
+}
+
+#[doc("Converts the passed pounds per square inch(val) to bars")]
+fn psi_to_bar(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_PSI / PASCALS_PER_BAR, nil
+}
+
+#[doc("Converts the passed pounds per square inch(val) to atmospheres")]
+fn psi_to_atmosphere(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_PSI / STANDARD_ATMOSPHERE_PASCALS, nil
+}
+
+#[doc("Converts the passed pounds per square inch(val) to millimeters of mercury")]
+fn psi_to_millimeter_of_mercury(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_PSI / PASCALS_PER_MILLIMETER_OF_MERCURY, nil
+}
+
+
+/*********************************
+MILLIMETERS OF MERCURY CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed millimeters of mercury(val) to pascals")]
+fn millimeter_of_mercury_to_pascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_MILLIMETER_OF_MERCURY, nil
+}
+
+#[doc("Converts the passed millimeters of mercury(val) to kilopascals")]
+fn millimeter_of_mercury_to_kilopascal(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_MILLIMETER_OF_MERCURY / PASCALS_PER_KILOPASCAL, nil
+}
+
+#[doc("Converts the passed millimeters of mercury(val) to bars")]
+fn millimeter_of_mercury_to_bar(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_MILLIMETER_OF_MERCURY / PASCALS_PER_BAR, nil
+}
+
+#[doc("Converts the passed millimeters of mercury(val) to atmospheres")]
+fn millimeter_of_mercury_to_atmosphere(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_MILLIMETER_OF_MERCURY / STANDARD_ATMOSPHERE_PASCALS, nil
+}
+
+#[doc("Converts the passed millimeters of mercury(val) to pounds per square inch")]
+fn millimeter_of_mercury_to_psi(val f64) -> (f64, Error) {
+    mut err = validate_pressure(val)
+    if err != nil {
+        return MIN_PRESSURE_VALUE, err
+    }
+    return val * PASCALS_PER_MILLIMETER_OF_MERCURY / PASCALS_PER_PSI, nil
+}

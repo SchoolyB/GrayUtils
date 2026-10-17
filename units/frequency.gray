@@ -1,0 +1,243 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_FREQUENCY_VALUE f64 = 0.0
+private const MAX_FREQUENCY_VALUE f64 = 1.0e300
+
+/*********************************
+FREQUENCY CONSTANTS
+*********************************/
+const HERTZ_PER_KILOHERTZ f64 = 1000.0
+const HERTZ_PER_MEGAHERTZ f64 = 1000000.0
+const HERTZ_PER_GIGAHERTZ f64 = 1000000000.0
+const HERTZ_PER_RPM f64 = 0.016666666666666666
+
+#error_code
+private const FrequencyErrorCodes enum {
+    FREQUENCY_VAL_NEGATIVE
+    FREQUENCY_VAL_NOT_A_NUMBER
+    FREQUENCY_VAL_INFINITE
+    FREQUENCY_VAL_TOO_LARGE
+}
+
+// Returns an error when val is not a valid frequency
+private fn validate_frequency(val f64) -> Error {
+    if math.is_nan(val) {
+        return error(.FREQUENCY_VAL_NOT_A_NUMBER, "Value is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.FREQUENCY_VAL_INFINITE, "Value is infinite")
+    }
+    if val < MIN_FREQUENCY_VALUE {
+        return error(.FREQUENCY_VAL_NEGATIVE, "Value ${val} is negative, min is ${MIN_FREQUENCY_VALUE}")
+    }
+    if val > MAX_FREQUENCY_VALUE {
+        return error(.FREQUENCY_VAL_TOO_LARGE, "Value ${val} too large, max is ${MAX_FREQUENCY_VALUE}")
+    }
+    return nil
+}
+
+/*********************************
+HERTZ CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed hertz(val) to kilohertz")]
+fn hertz_to_kilohertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val / HERTZ_PER_KILOHERTZ, nil
+}
+
+#[doc("Converts the passed hertz(val) to megahertz")]
+fn hertz_to_megahertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val / HERTZ_PER_MEGAHERTZ, nil
+}
+
+#[doc("Converts the passed hertz(val) to gigahertz")]
+fn hertz_to_gigahertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val / HERTZ_PER_GIGAHERTZ, nil
+}
+
+#[doc("Converts the passed hertz(val) to revolutions per minute")]
+fn hertz_to_revolution_per_minute(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val / HERTZ_PER_RPM, nil
+}
+
+
+/*********************************
+KILOHERTZ CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed kilohertz(val) to hertz")]
+fn kilohertz_to_hertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_KILOHERTZ, nil
+}
+
+#[doc("Converts the passed kilohertz(val) to megahertz")]
+fn kilohertz_to_megahertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_KILOHERTZ / HERTZ_PER_MEGAHERTZ, nil
+}
+
+#[doc("Converts the passed kilohertz(val) to gigahertz")]
+fn kilohertz_to_gigahertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_KILOHERTZ / HERTZ_PER_GIGAHERTZ, nil
+}
+
+#[doc("Converts the passed kilohertz(val) to revolutions per minute")]
+fn kilohertz_to_revolution_per_minute(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_KILOHERTZ / HERTZ_PER_RPM, nil
+}
+
+
+/*********************************
+MEGAHERTZ CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed megahertz(val) to hertz")]
+fn megahertz_to_hertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_MEGAHERTZ, nil
+}
+
+#[doc("Converts the passed megahertz(val) to kilohertz")]
+fn megahertz_to_kilohertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_MEGAHERTZ / HERTZ_PER_KILOHERTZ, nil
+}
+
+#[doc("Converts the passed megahertz(val) to gigahertz")]
+fn megahertz_to_gigahertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_MEGAHERTZ / HERTZ_PER_GIGAHERTZ, nil
+}
+
+#[doc("Converts the passed megahertz(val) to revolutions per minute")]
+fn megahertz_to_revolution_per_minute(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_MEGAHERTZ / HERTZ_PER_RPM, nil
+}
+
+
+/*********************************
+GIGAHERTZ CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed gigahertz(val) to hertz")]
+fn gigahertz_to_hertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_GIGAHERTZ, nil
+}
+
+#[doc("Converts the passed gigahertz(val) to kilohertz")]
+fn gigahertz_to_kilohertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_GIGAHERTZ / HERTZ_PER_KILOHERTZ, nil
+}
+
+#[doc("Converts the passed gigahertz(val) to megahertz")]
+fn gigahertz_to_megahertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_GIGAHERTZ / HERTZ_PER_MEGAHERTZ, nil
+}
+
+#[doc("Converts the passed gigahertz(val) to revolutions per minute")]
+fn gigahertz_to_revolution_per_minute(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_GIGAHERTZ / HERTZ_PER_RPM, nil
+}
+
+
+/*********************************
+REVOLUTIONS PER MINUTE CONVERSION FUNCTIONS
+*********************************/
+#[doc("Converts the passed revolutions per minute(val) to hertz")]
+fn revolution_per_minute_to_hertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_RPM, nil
+}
+
+#[doc("Converts the passed revolutions per minute(val) to kilohertz")]
+fn revolution_per_minute_to_kilohertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_RPM / HERTZ_PER_KILOHERTZ, nil
+}
+
+#[doc("Converts the passed revolutions per minute(val) to megahertz")]
+fn revolution_per_minute_to_megahertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_RPM / HERTZ_PER_MEGAHERTZ, nil
+}
+
+#[doc("Converts the passed revolutions per minute(val) to gigahertz")]
+fn revolution_per_minute_to_gigahertz(val f64) -> (f64, Error) {
+    mut err = validate_frequency(val)
+    if err != nil {
+        return MIN_FREQUENCY_VALUE, err
+    }
+    return val * HERTZ_PER_RPM / HERTZ_PER_GIGAHERTZ, nil
+}
