@@ -1,0 +1,412 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_GEOMETRY_VALUE f64 = -1.0e50
+private const MAX_GEOMETRY_VALUE f64 = 1.0e50
+private const MIN_DIMENSION_VALUE f64 = 0.0
+
+#error_code
+private const GeometryErrorCodes enum {
+    GEOMETRY_VAL_NEGATIVE
+    GEOMETRY_VAL_NOT_A_NUMBER
+    GEOMETRY_VAL_INFINITE
+    GEOMETRY_VAL_TOO_LARGE
+}
+
+private const GeometryParameter enum {
+    SIDE = "side"
+    LENGTH = "length"
+    WIDTH = "width"
+    HEIGHT = "height"
+    RADIUS = "radius"
+    X = "x"
+    Y = "y"
+}
+
+// Returns an error when val (the parameter name) is NaN, infinite or too large
+private fn validate_geometry_coordinate(val f64, name GeometryParameter) -> Error {
+    if math.is_nan(val) {
+        return error(.GEOMETRY_VAL_NOT_A_NUMBER, "${name} is not a number")
+    }
+    if math.is_infinite(val) {
+        return error(.GEOMETRY_VAL_INFINITE, "${name} is infinite")
+    }
+    if val < MIN_GEOMETRY_VALUE || val > MAX_GEOMETRY_VALUE {
+        return error(.GEOMETRY_VAL_TOO_LARGE, "${name} ${val} out of range, max magnitude is ${MAX_GEOMETRY_VALUE}")
+    }
+    return nil
+}
+
+// Returns an error when val (the parameter name) is invalid or negative
+private fn validate_geometry_dimension(val f64, name GeometryParameter) -> Error {
+    mut err = validate_geometry_coordinate(val, name)
+    if err != nil {
+        return err
+    }
+    if val < MIN_DIMENSION_VALUE {
+        return error(.GEOMETRY_VAL_NEGATIVE, "${name} ${val} is negative, min is ${MIN_DIMENSION_VALUE}")
+    }
+    return nil
+}
+
+// Returns an error when either coordinate of point is invalid
+private fn validate_geometry_point(point Point2D) -> Error {
+    mut err = validate_geometry_coordinate(point.x, .X)
+    if err != nil {
+        return err
+    }
+    return validate_geometry_coordinate(point.y, .Y)
+}
+
+// Returns an error when rectangle has an invalid corner, width or height
+private fn validate_geometry_rectangle(rectangle Rectangle) -> Error {
+    mut err = validate_geometry_coordinate(rectangle.x, .X)
+    if err != nil {
+        return err
+    }
+    err = validate_geometry_coordinate(rectangle.y, .Y)
+    if err != nil {
+        return err
+    }
+    err = validate_geometry_dimension(rectangle.width, .WIDTH)
+    if err != nil {
+        return err
+    }
+    return validate_geometry_dimension(rectangle.height, .HEIGHT)
+}
+
+// Returns an error when circle has an invalid center or radius
+private fn validate_geometry_circle(circle Circle) -> Error {
+    mut err = validate_geometry_coordinate(circle.x, .X)
+    if err != nil {
+        return err
+    }
+    err = validate_geometry_coordinate(circle.y, .Y)
+    if err != nil {
+        return err
+    }
+    return validate_geometry_dimension(circle.radius, .RADIUS)
+}
+
+// Returns 1 when the turn from first to second to third is counterclockwise, -1 when clockwise and 0 when collinear
+private fn segment_orientation(first Point2D, second Point2D, third Point2D) -> i64 {
+    mut cross f64 = (second.y - first.y) * (third.x - second.x) - (second.x - first.x) * (third.y - second.y)
+    if cross > 0.0 {
+        return -1
+    }
+    if cross < 0.0 {
+        return 1
+    }
+    return 0
+}
+
+// Returns true when point, known to be collinear with the segment from start to end, lies within it
+private fn segment_holds_collinear(start Point2D, end Point2D, point Point2D) -> bool {
+    return point.x >= math.min(start.x, end.x) && point.x <= math.max(start.x, end.x) && point.y >= math.min(start.y, end.y) && point.y <= math.max(start.y, end.y)
+}
+
+/*********************************
+SOLID SHAPE CALCULATION FUNCTIONS
+*********************************/
+#[doc("Calculates the volume of a cube with the passed side(side) length")]
+fn calculate_cube_volume(side f64) -> (f64, Error) {
+    mut errSide = validate_geometry_dimension(side, .SIDE)
+    if errSide != nil {
+        return MIN_GEOMETRY_VALUE, errSide
+    }
+    return side * side * side, nil
+}
+
+#[doc("Calculates the surface area of a cube with the passed side(side) length")]
+fn calculate_cube_surface_area(side f64) -> (f64, Error) {
+    mut errSide = validate_geometry_dimension(side, .SIDE)
+    if errSide != nil {
+        return MIN_GEOMETRY_VALUE, errSide
+    }
+    return 6.0 * side * side, nil
+}
+
+#[doc("Calculates the volume of a rectangular box with the passed length(length), width(width) and height(height)")]
+fn calculate_box_volume(length f64, width f64, height f64) -> (f64, Error) {
+    mut errLength = validate_geometry_dimension(length, .LENGTH)
+    if errLength != nil {
+        return MIN_GEOMETRY_VALUE, errLength
+    }
+    mut errWidth = validate_geometry_dimension(width, .WIDTH)
+    if errWidth != nil {
+        return MIN_GEOMETRY_VALUE, errWidth
+    }
+    mut errHeight = validate_geometry_dimension(height, .HEIGHT)
+    if errHeight != nil {
+        return MIN_GEOMETRY_VALUE, errHeight
+    }
+    return length * width * height, nil
+}
+
+#[doc("Calculates the surface area of a rectangular box with the passed length(length), width(width) and height(height)")]
+fn calculate_box_surface_area(length f64, width f64, height f64) -> (f64, Error) {
+    mut errLength = validate_geometry_dimension(length, .LENGTH)
+    if errLength != nil {
+        return MIN_GEOMETRY_VALUE, errLength
+    }
+    mut errWidth = validate_geometry_dimension(width, .WIDTH)
+    if errWidth != nil {
+        return MIN_GEOMETRY_VALUE, errWidth
+    }
+    mut errHeight = validate_geometry_dimension(height, .HEIGHT)
+    if errHeight != nil {
+        return MIN_GEOMETRY_VALUE, errHeight
+    }
+    return 2.0 * (length * width + length * height + width * height), nil
+}
+
+#[doc("Calculates the volume of a sphere with the passed radius(radius)")]
+fn calculate_sphere_volume(radius f64) -> (f64, Error) {
+    mut errRadius = validate_geometry_dimension(radius, .RADIUS)
+    if errRadius != nil {
+        return MIN_GEOMETRY_VALUE, errRadius
+    }
+    return 4.0 / 3.0 * math.PI * radius * radius * radius, nil
+}
+
+#[doc("Calculates the surface area of a sphere with the passed radius(radius)")]
+fn calculate_sphere_surface_area(radius f64) -> (f64, Error) {
+    mut errRadius = validate_geometry_dimension(radius, .RADIUS)
+    if errRadius != nil {
+        return MIN_GEOMETRY_VALUE, errRadius
+    }
+    return 4.0 * math.PI * radius * radius, nil
+}
+
+#[doc("Calculates the volume of a cylinder with the passed radius(radius) and height(height)")]
+fn calculate_cylinder_volume(radius f64, height f64) -> (f64, Error) {
+    mut errRadius = validate_geometry_dimension(radius, .RADIUS)
+    if errRadius != nil {
+        return MIN_GEOMETRY_VALUE, errRadius
+    }
+    mut errHeight = validate_geometry_dimension(height, .HEIGHT)
+    if errHeight != nil {
+        return MIN_GEOMETRY_VALUE, errHeight
+    }
+    return math.PI * radius * radius * height, nil
+}
+
+#[doc("Calculates the surface area of a cylinder, including both ends, with the passed radius(radius) and height(height)")]
+fn calculate_cylinder_surface_area(radius f64, height f64) -> (f64, Error) {
+    mut errRadius = validate_geometry_dimension(radius, .RADIUS)
+    if errRadius != nil {
+        return MIN_GEOMETRY_VALUE, errRadius
+    }
+    mut errHeight = validate_geometry_dimension(height, .HEIGHT)
+    if errHeight != nil {
+        return MIN_GEOMETRY_VALUE, errHeight
+    }
+    return 2.0 * math.PI * radius * (radius + height), nil
+}
+
+#[doc("Calculates the volume of a cone with the passed radius(radius) and height(height)")]
+fn calculate_cone_volume(radius f64, height f64) -> (f64, Error) {
+    mut errRadius = validate_geometry_dimension(radius, .RADIUS)
+    if errRadius != nil {
+        return MIN_GEOMETRY_VALUE, errRadius
+    }
+    mut errHeight = validate_geometry_dimension(height, .HEIGHT)
+    if errHeight != nil {
+        return MIN_GEOMETRY_VALUE, errHeight
+    }
+    return math.PI * radius * radius * height / 3.0, nil
+}
+
+#[doc("Calculates the surface area of a cone, including its base, with the passed radius(radius) and height(height)")]
+fn calculate_cone_surface_area(radius f64, height f64) -> (f64, Error) {
+    mut errRadius = validate_geometry_dimension(radius, .RADIUS)
+    if errRadius != nil {
+        return MIN_GEOMETRY_VALUE, errRadius
+    }
+    mut errHeight = validate_geometry_dimension(height, .HEIGHT)
+    if errHeight != nil {
+        return MIN_GEOMETRY_VALUE, errHeight
+    }
+    return math.PI * radius * (radius + math.hypot(radius, height)), nil
+}
+
+/*********************************
+2D SHAPES
+*********************************/
+#doc("A point on a plane")
+const Point2D struct {
+    x, y f64
+
+    #doc("Calculates the distance between the passed points(first, second)")
+    fn distance(first Point2D, second Point2D) -> (f64, Error) {
+        mut err = validate_geometry_point(first)
+        if err != nil {
+            return MIN_GEOMETRY_VALUE, err
+        }
+        err = validate_geometry_point(second)
+        if err != nil {
+            return MIN_GEOMETRY_VALUE, err
+        }
+        return math.hypot(first.x - second.x, first.y - second.y), nil
+    }
+
+    #doc("Finds the point halfway between the passed points(first, second)")
+    fn midpoint(first Point2D, second Point2D) -> (Point2D, Error) {
+        mut err = validate_geometry_point(first)
+        if err != nil {
+            return Point2D{x: MIN_GEOMETRY_VALUE, y: MIN_GEOMETRY_VALUE}, err
+        }
+        err = validate_geometry_point(second)
+        if err != nil {
+            return Point2D{x: MIN_GEOMETRY_VALUE, y: MIN_GEOMETRY_VALUE}, err
+        }
+        return Point2D{x: (first.x + second.x) / 2.0, y: (first.y + second.y) / 2.0}, nil
+    }
+}
+
+#doc("A rectangle whose x and y are its corner with the smallest x and y")
+const Rectangle struct {
+    x, y, width, height f64
+
+    #doc("Calculates the area of the passed rectangle(rectangle)")
+    fn area(rectangle Rectangle) -> (f64, Error) {
+        mut err = validate_geometry_rectangle(rectangle)
+        if err != nil {
+            return MIN_GEOMETRY_VALUE, err
+        }
+        return rectangle.width * rectangle.height, nil
+    }
+
+    #doc("Calculates the perimeter of the passed rectangle(rectangle)")
+    fn perimeter(rectangle Rectangle) -> (f64, Error) {
+        mut err = validate_geometry_rectangle(rectangle)
+        if err != nil {
+            return MIN_GEOMETRY_VALUE, err
+        }
+        return 2.0 * (rectangle.width + rectangle.height), nil
+    }
+
+    #doc("Checks if the passed point(point) is inside or on the edge of the passed rectangle(rectangle)")
+    fn contains_point(rectangle Rectangle, point Point2D) -> (bool, Error) {
+        mut err = validate_geometry_rectangle(rectangle)
+        if err != nil {
+            return false, err
+        }
+        err = validate_geometry_point(point)
+        if err != nil {
+            return false, err
+        }
+        return point.x >= rectangle.x && point.x <= rectangle.x + rectangle.width && point.y >= rectangle.y && point.y <= rectangle.y + rectangle.height, nil
+    }
+
+    #doc("Checks if the passed rectangles(first, second) overlap. Rectangles that only touch at an edge or corner count as overlapping")
+    fn intersects(first Rectangle, second Rectangle) -> (bool, Error) {
+        mut err = validate_geometry_rectangle(first)
+        if err != nil {
+            return false, err
+        }
+        err = validate_geometry_rectangle(second)
+        if err != nil {
+            return false, err
+        }
+        return first.x <= second.x + second.width && second.x <= first.x + first.width && first.y <= second.y + second.height && second.y <= first.y + first.height, nil
+    }
+}
+
+#doc("A circle with its center at x and y")
+const Circle struct {
+    x, y, radius f64
+
+    #doc("Calculates the area of the passed circle(circle)")
+    fn area(circle Circle) -> (f64, Error) {
+        mut err = validate_geometry_circle(circle)
+        if err != nil {
+            return MIN_GEOMETRY_VALUE, err
+        }
+        return math.PI * circle.radius * circle.radius, nil
+    }
+
+    #doc("Calculates the circumference of the passed circle(circle)")
+    fn circumference(circle Circle) -> (f64, Error) {
+        mut err = validate_geometry_circle(circle)
+        if err != nil {
+            return MIN_GEOMETRY_VALUE, err
+        }
+        return 2.0 * math.PI * circle.radius, nil
+    }
+
+    #doc("Checks if the passed point(point) is inside or on the edge of the passed circle(circle)")
+    fn contains_point(circle Circle, point Point2D) -> (bool, Error) {
+        mut err = validate_geometry_circle(circle)
+        if err != nil {
+            return false, err
+        }
+        err = validate_geometry_point(point)
+        if err != nil {
+            return false, err
+        }
+        return math.hypot(point.x - circle.x, point.y - circle.y) <= circle.radius, nil
+    }
+
+    #doc("Checks if the passed circles(first, second) overlap. Circles that only touch at one point count as overlapping")
+    fn intersects(first Circle, second Circle) -> (bool, Error) {
+        mut err = validate_geometry_circle(first)
+        if err != nil {
+            return false, err
+        }
+        err = validate_geometry_circle(second)
+        if err != nil {
+            return false, err
+        }
+        return math.hypot(first.x - second.x, first.y - second.y) <= first.radius + second.radius, nil
+    }
+}
+
+/*********************************
+LINE SEGMENT FUNCTIONS
+*********************************/
+#[doc("Checks if the line segment from the passed firstStart to firstEnd crosses or touches the line segment from secondStart to secondEnd")]
+fn segments_intersect(firstStart Point2D, firstEnd Point2D, secondStart Point2D, secondEnd Point2D) -> (bool, Error) {
+    mut err = validate_geometry_point(firstStart)
+    if err != nil {
+        return false, err
+    }
+    err = validate_geometry_point(firstEnd)
+    if err != nil {
+        return false, err
+    }
+    err = validate_geometry_point(secondStart)
+    if err != nil {
+        return false, err
+    }
+    err = validate_geometry_point(secondEnd)
+    if err != nil {
+        return false, err
+    }
+    mut firstSide i64 = segment_orientation(firstStart, firstEnd, secondStart)
+    mut secondSide i64 = segment_orientation(firstStart, firstEnd, secondEnd)
+    mut thirdSide i64 = segment_orientation(secondStart, secondEnd, firstStart)
+    mut fourthSide i64 = segment_orientation(secondStart, secondEnd, firstEnd)
+    if firstSide != secondSide && thirdSide != fourthSide {
+        return true, nil
+    }
+    if firstSide == 0 && segment_holds_collinear(firstStart, firstEnd, secondStart) {
+        return true, nil
+    }
+    if secondSide == 0 && segment_holds_collinear(firstStart, firstEnd, secondEnd) {
+        return true, nil
+    }
+    if thirdSide == 0 && segment_holds_collinear(secondStart, secondEnd, firstStart) {
+        return true, nil
+    }
+    if fourthSide == 0 && segment_holds_collinear(secondStart, secondEnd, firstEnd) {
+        return true, nil
+    }
+    return false, nil
+}
