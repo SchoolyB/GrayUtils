@@ -1,0 +1,196 @@
+/*
+* Author: Marshall A Burns
+* Email:  marshallbcodes@gmail.com
+* GitHub: @SchoolyB
+*/
+
+import @arrays
+import @math
+
+//INTERNAL CONSTANTS
+private const MIN_STATS_VALUE f64 = -1.0e100
+private const MAX_STATS_VALUE f64 = 1.0e100
+private const MIN_PERCENT f64 = 0.0
+private const MAX_PERCENT f64 = 100.0
+
+#error_code
+private const StatsErrorCodes enum {
+    STATS_EMPTY_DATA
+    STATS_NOT_ENOUGH_DATA
+    STATS_VAL_NOT_A_NUMBER
+    STATS_VAL_INFINITE
+    STATS_VAL_TOO_LARGE
+    STATS_PERCENT_OUT_OF_RANGE
+    STATS_RESULT_OUT_OF_RANGE
+}
+
+// Returns an error when data has fewer than minimumCount values or holds an invalid value
+private fn validate_stats(data [f64], minimumCount i64) -> Error {
+    if len(data) == 0 {
+        return error(.STATS_EMPTY_DATA, "Data is empty")
+    }
+    if len(data) < minimumCount {
+        return error(.STATS_NOT_ENOUGH_DATA, "Data has ${len(data)} values, needs at least ${minimumCount}")
+    }
+    for_each val in data {
+        if math.is_nan(val) {
+            return error(.STATS_VAL_NOT_A_NUMBER, "Data holds a value that is not a number")
+        }
+        if math.is_infinite(val) {
+            return error(.STATS_VAL_INFINITE, "Data holds an infinite value")
+        }
+        if val < MIN_STATS_VALUE || val > MAX_STATS_VALUE {
+            return error(.STATS_VAL_TOO_LARGE, "Value ${val} out of range, max magnitude is ${MAX_STATS_VALUE}")
+        }
+    }
+    return nil
+}
+
+// Returns an error when result overflowed or is not a number
+private fn validate_stats_result(result f64) -> Error {
+    if !math.is_finite(result) {
+        return error(.STATS_RESULT_OUT_OF_RANGE, "Result is out of range")
+    }
+    return nil
+}
+
+// Returns an ascending copy of data
+private fn sorted_stats(data [f64]) -> [f64] {
+    mut sorted [f64] = data
+    arrays.sort_asc(sorted)
+    return sorted
+}
+
+// Returns the sum of the squared distances between each value in data and average
+private fn sum_squared_distances(data [f64], average f64) -> f64 {
+    mut total f64 = 0.0
+    for_each val in data {
+        total += (val - average) * (val - average)
+    }
+    return total
+}
+
+#[doc("Calculates the mean of the passed data(data)")]
+fn mean(data [f64]) -> (f64, Error) {
+    mut err = validate_stats(data, 1)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    mut result = arrays.get_sum(data) / cast(len(data), f64)
+    err = validate_stats_result(result)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates the median of the passed data(data). Averages the two middle values when data has an even count")]
+fn median(data [f64]) -> (f64, Error) {
+    mut err = validate_stats(data, 1)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    mut sorted = sorted_stats(data)
+    mut middle i64 = len(sorted) / 2
+    if len(sorted) % 2 == 1 {
+        return sorted[middle], nil
+    }
+    return sorted[middle - 1] / 2.0 + sorted[middle] / 2.0, nil
+}
+
+#[doc("Finds the mode of the passed data(data). Returns the smallest value when several values occur equally often")]
+fn mode(data [f64]) -> (f64, Error) {
+    mut err = validate_stats(data, 1)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    mut sorted = sorted_stats(data)
+    mut best f64 = sorted[0]
+    mut bestCount i64 = 0
+    mut runCount i64 = 0
+    mut runValue f64 = sorted[0]
+    for_each val in sorted {
+        if val == runValue {
+            runCount += 1
+        } otherwise {
+            runValue = val
+            runCount = 1
+        }
+        if runCount > bestCount {
+            best = runValue
+            bestCount = runCount
+        }
+    }
+    return best, nil
+}
+
+#[doc("Calculates the sample variance of the passed data(data), dividing by one less than the count. Needs at least 2 values")]
+fn variance(data [f64]) -> (f64, Error) {
+    mut err = validate_stats(data, 2)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    mut average, meanErr = mean(data)
+    if meanErr != nil {
+        return MIN_STATS_VALUE, meanErr
+    }
+    mut result = sum_squared_distances(data, average) / cast(len(data) - 1, f64)
+    err = validate_stats_result(result)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates the population variance of the passed data(data), dividing by the count")]
+fn population_variance(data [f64]) -> (f64, Error) {
+    mut err = validate_stats(data, 1)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    mut average, meanErr = mean(data)
+    if meanErr != nil {
+        return MIN_STATS_VALUE, meanErr
+    }
+    mut result = sum_squared_distances(data, average) / cast(len(data), f64)
+    err = validate_stats_result(result)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    return result, nil
+}
+
+#[doc("Calculates the sample standard deviation of the passed data(data). Needs at least 2 values")]
+fn stddev(data [f64]) -> (f64, Error) {
+    mut result, err = variance(data)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    return math.sqrt(result), nil
+}
+
+#[doc("Calculates the population standard deviation of the passed data(data)")]
+fn population_stddev(data [f64]) -> (f64, Error) {
+    mut result, err = population_variance(data)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    return math.sqrt(result), nil
+}
+
+#[doc("Calculates the percentile(percent) of the passed data(data) by linear interpolation. percent must be from 0.0 to 100.0")]
+fn percentile(data [f64], percent f64) -> (f64, Error) {
+    mut err = validate_stats(data, 1)
+    if err != nil {
+        return MIN_STATS_VALUE, err
+    }
+    if math.is_nan(percent) || percent < MIN_PERCENT || percent > MAX_PERCENT {
+        return MIN_STATS_VALUE, error(.STATS_PERCENT_OUT_OF_RANGE, "Percent ${percent} out of range, must be from ${MIN_PERCENT} to ${MAX_PERCENT}")
+    }
+    mut sorted = sorted_stats(data)
+    mut rank f64 = percent / MAX_PERCENT * cast(len(sorted) - 1, f64)
+    mut lower i64 = cast(math.floor(rank), i64)
+    mut upper i64 = cast(math.ceil(rank), i64)
+    mut fraction f64 = rank - cast(lower, f64)
+    return sorted[lower] + (sorted[upper] - sorted[lower]) * fraction, nil
+}
